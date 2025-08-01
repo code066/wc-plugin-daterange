@@ -1,0 +1,372 @@
+/**
+ * TaroJS 微信小程序日期范围插件样式
+ * 优化小程序显示效果
+ */
+
+.date-range-example {
+  padding: 20rpx;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+
+  /* 统计卡片 */
+  .statistics-cards {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 30rpx;
+    gap: 20rpx;
+
+    .stat-card {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10rpx);
+      border-radius: 20rpx;
+      padding: 30rpx 20rpx;
+      text-align: center;
+      box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.1);
+      border: 1rpx solid rgba(255, 255, 255, 0.2);
+
+      .stat-number {
+        display: block;
+        font-size: 48rpx;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 10rpx;
+      }
+
+      .stat-label {
+        display: block;
+        font-size: 24rpx;
+        color: #666;
+      }
+    }
+  }
+
+  /* 操作按钮 */
+  .action-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 30rpx;
+    gap: 15rpx;
+
+    .btn {
+      flex: 1;
+      padding: 20rpx;
+      border-radius: 15rpx;
+      text-align: center;
+      font-size: 28rpx;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.1);
+
+      &.btn-primary {
+        background: linear-gradient(45deg, #4facfe 0%, #00f2fe 100%);
+        color: white;
+      }
+
+      &.btn-secondary {
+        background: linear-gradient(45deg, #43e97b 0%, #38f9d7 100%);
+        color: white;
+      }
+
+      &.btn-danger {
+        background: linear-gradient(45deg, #fa709a 0%, #fee140 100%);
+        color: white;
+      }
+
+      &:active {
+        transform: translateY(2rpx);
+        box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.2);
+      }
+    }
+  }
+
+  /* 日历容器 */
+  .calendar-container {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10rpx);
+    border-radius: 20rpx;
+    padding: 20rpx;
+    margin-bottom: 30rpx;
+    box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.1);
+    border: 1rpx solid rgba(255, 255, 255, 0.2);
+  }
+
+  /* 选中范围详情 */
+  .selected-range-detail {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10rpx);
+    border-radius: 20rpx;
+    padding: 30rpx;
+    box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.1);
+    border: 1rpx solid rgba(255, 255, 255, 0.2);
+
+    .detail-title {
+      display: block;
+      font-size: 32rpx;
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 15rpx;
+    }
+
+    .detail-content {
+      display: block;
+      font-size: 28rpx;
+      color: #666;
+      margin-bottom: 15rpx;
+      line-height: 1.5;
+    }
+
+    .detail-date {
+      display: block;
+      font-size: 24rpx;
+      color: #999;
+      margin-bottom: 15rpx;
+    }
+
+    .priority {
+      display: inline-block;
+      padding: 8rpx 16rpx;
+      border-radius: 20rpx;
+      font-size: 20rpx;
+      font-weight: bold;
+      text-transform: uppercase;
+
+      &.priority-high {
+        background: #ffebee;
+        color: #c62828;
+        border: 1rpx solid #ffcdd2;
+      }
+
+      &.priority-medium {
+        background: #fff3e0;
+        color: #ef6c00;
+        border: 1rpx solid #ffcc02;
+      }
+
+      &.priority-low {
+        background: #e8f5e8;
+        color: #2e7d32;
+        border: 1rpx solid #c8e6c9;
+      }
+    }
+  }
+}
+
+/* 日历内部样式优化 */
+.wx-calendar {
+  /* 日期范围标记样式 */
+  .date-range-mark {
+    position: relative;
+    border-radius: 8rpx;
+    transition: all 0.3s ease;
+
+    &.range-start {
+      border-top-left-radius: 50%;
+      border-bottom-left-radius: 50%;
+    }
+
+    &.range-end {
+      border-top-right-radius: 50%;
+      border-bottom-right-radius: 50%;
+    }
+
+    &.range-middle {
+      border-radius: 0;
+    }
+
+    &.range-single {
+      border-radius: 50%;
+    }
+
+    /* 内容显示 */
+    .range-content {
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 4rpx 8rpx;
+      border-radius: 6rpx;
+      font-size: 20rpx;
+      white-space: nowrap;
+      z-index: 10;
+      margin-top: 4rpx;
+
+      &::before {
+        content: '';
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        border: 4rpx solid transparent;
+        border-bottom-color: rgba(0, 0, 0, 0.8);
+      }
+    }
+
+    /* 跨日期连续显示 */
+    &.span-content {
+      .range-content {
+        position: absolute;
+        top: 50%;
+        left: 0;
+        right: 0;
+        transform: translateY(-50%);
+        background: rgba(255, 255, 255, 0.9);
+        color: #333;
+        padding: 2rpx 8rpx;
+        border-radius: 4rpx;
+        font-size: 18rpx;
+        text-align: center;
+        margin-top: 0;
+        backdrop-filter: blur(5rpx);
+
+        &::before {
+          display: none;
+        }
+      }
+    }
+
+    /* 优先级指示器 */
+    &.priority-high::after {
+      content: '';
+      position: absolute;
+      top: 2rpx;
+      right: 2rpx;
+      width: 8rpx;
+      height: 8rpx;
+      background: #f44336;
+      border-radius: 50%;
+    }
+
+    &.priority-medium::after {
+      content: '';
+      position: absolute;
+      top: 2rpx;
+      right: 2rpx;
+      width: 8rpx;
+      height: 8rpx;
+      background: #ff9800;
+      border-radius: 50%;
+    }
+
+    &.priority-low::after {
+      content: '';
+      position: absolute;
+      top: 2rpx;
+      right: 2rpx;
+      width: 8rpx;
+      height: 8rpx;
+      background: #4caf50;
+      border-radius: 50%;
+    }
+
+    /* 状态指示 */
+    &.status-completed {
+      opacity: 0.7;
+      
+      &::before {
+        content: '✓';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: #4caf50;
+        font-weight: bold;
+        font-size: 24rpx;
+        z-index: 5;
+      }
+    }
+
+    &.status-in-progress {
+      animation: pulse 2s infinite;
+    }
+
+    /* 悬停效果 */
+    &:active {
+      transform: scale(0.95);
+      box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.2);
+    }
+  }
+}
+
+/* 动画效果 */
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(33, 150, 243, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10rpx rgba(33, 150, 243, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(33, 150, 243, 0);
+  }
+}
+
+/* 响应式适配 */
+@media screen and (max-width: 750rpx) {
+  .date-range-example {
+    padding: 15rpx;
+
+    .statistics-cards {
+      .stat-card {
+        padding: 20rpx 15rpx;
+
+        .stat-number {
+          font-size: 40rpx;
+        }
+
+        .stat-label {
+          font-size: 22rpx;
+        }
+      }
+    }
+
+    .action-buttons {
+      .btn {
+        padding: 15rpx;
+        font-size: 26rpx;
+      }
+    }
+
+    .selected-range-detail {
+      padding: 20rpx;
+
+      .detail-title {
+        font-size: 28rpx;
+      }
+
+      .detail-content {
+        font-size: 26rpx;
+      }
+    }
+  }
+}
+
+/* 深色模式适配 */
+@media (prefers-color-scheme: dark) {
+  .date-range-example {
+    background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+
+    .statistics-cards .stat-card,
+    .calendar-container,
+    .selected-range-detail {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+
+      .stat-number,
+      .detail-title {
+        color: #fff;
+      }
+
+      .stat-label,
+      .detail-content {
+        color: #bbb;
+      }
+
+      .detail-date {
+        color: #999;
+      }
+    }
+  }
+}

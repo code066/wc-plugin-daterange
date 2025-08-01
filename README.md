@@ -1,287 +1,450 @@
-# @code066/wc-plugin-daterange
+# wc-plugin-daterange
 
-小程序日历组件 wx-calendar 日期范围标记插件，支持在日历上显示带名称的日期范围，并提供点击交互功能。
+微信小程序日历日期范围插件，参考 [wc-plugin-ics](https://github.com/lspriv/wc-plugin-ics) 设计模式，专为 TaroJS 微信小程序开发优化。
 
 ## 特性
 
-- 📅 **日期范围标记** - 在日历上标记指定的日期范围
-- 🎨 **自定义样式** - 支持自定义颜色和背景色
-- 🔄 **多范围支持** - 同时显示多个不同的日期范围
-- 🖱️ **点击交互** - 支持范围点击事件，提供 code 标识
-- 🔧 **动态管理** - 运行时添加、删除、更新范围
-- 📱 **小程序兼容** - 完全兼容微信小程序环境
-- 🎯 **TypeScript 支持** - 提供完整的类型定义
-
-## 使用要求
-
-- 小程序基础库 SDKVersion >= 3.0.0
-- 日历组件 wx-calendar >= 1.6.0
+- 📅 日期范围选择和显示
+- 🎨 自定义样式和颜色  
+- 📱 支持跨日期连续显示（甘特图效果）
+- ⚡ 高性能批量操作和 TaroJS 优化
+- 🔧 灵活的配置选项和预设支持
+- 📦 TypeScript 支持
+- 🚀 专为微信小程序优化的生命周期管理
 
 ## 安装
 
 ```bash
-npm i @code066/wc-plugin-daterange -S
+npm install @code066/wc-plugin-daterange
 ```
 
-## 构建
+## 快速开始
 
-微信小程序开发工具菜单栏：**工具** --> **构建 npm**
-
-## 基本使用
-
-### 方式一：插件初始化时配置
+### 基础用法
 
 ```javascript
-const { WxCalendar } = require('@lspriv/wx-calendar/lib');
-const { DateRangePlugin } = require('@code066/wc-plugin-daterange');
+import WxCalendar from 'wx-calendar';
+import { DateRangePlugin } from '@code066/wc-plugin-daterange';
 
-// 使用插件
-WxCalendar.use(DateRangePlugin, {
-  ranges: [
-    {
-      name: '春节假期',
-      code: 'spring_festival_2024',
-      startDate: '2024-02-10',
-      endDate: '2024-02-17',
-      color: '#ff4757',
-      bgColor: '#ffe0e0',
-      data: { type: 'holiday' }
-    },
-    {
-      name: '项目开发',
-      code: 'project_dev_phase1',
-      startDate: '2024-03-01',
-      endDate: '2024-03-15',
-      color: '#3742fa',
-      bgColor: '#e0e5ff',
-      data: { projectId: 'P001' }
-    }
-  ],
-  markAs: 'festival',
-  onRangeClick: (range, date) => {
-    console.log('点击了范围:', range.code, '日期:', date);
-    // 根据 code 调用其他组件
-    loadDataByCode(range.code, date);
-  }
+// 创建日历实例
+const calendar = new WxCalendar({
+  container: '#calendar'
 });
 
-Page({
-  // 页面逻辑
-})
+// 使用插件（参考 wc-plugin-ics 的使用方式）
+calendar.use(DateRangePlugin, {
+  enableTaroOptimization: true,
+  showContent: true,
+  contentSpanMode: 'span'
+});
+
+// 获取插件实例
+const dateRangePlugin = calendar.getPlugin('dateRange');
+
+// 批量加载数据（类似 ICS 插件的 load 方法）
+const ranges = [
+  {
+    code: 'project-001',
+    name: '项目开发',
+    startDate: '2024-01-15',
+    endDate: '2024-01-30',
+    content: '移动端项目开发周期',
+    color: '#2196F3',
+    bgColor: '#E3F2FD'
+  }
+];
+
+dateRangePlugin.load(ranges);
 ```
 
-### 方式二：动态管理范围
+### 使用预设配置
 
 ```javascript
-const { WxCalendar } = require('@lspriv/wx-calendar/lib');
-const { DateRangePlugin, DATE_RANGE_PLUGIN_KEY } = require('@code066/wc-plugin-daterange');
+import { DateRangePlugin, ProjectManagementPreset, SchedulePreset } from '@code066/wc-plugin-daterange';
 
-WxCalendar.use(DateRangePlugin);
+// 项目管理预设
+const projectRange = {
+  code: 'project-001',
+  name: '移动端重构',
+  startDate: '2024-01-15',
+  endDate: '2024-02-28',
+  ...ProjectManagementPreset,
+  priority: 'high'
+};
 
-Page({
-  handleCalendarLoad() {
-    const calendar = this.selectComponent('#calendar');
-    const plugin = calendar.getPlugin(DATE_RANGE_PLUGIN_KEY);
-    
-    // 动态添加范围
-    plugin.addRange({
-      name: '出差',
-      code: 'business_trip_april',
-      startDate: '2024-04-01',
-      endDate: '2024-04-05',
-      color: '#4ecdc4',
-      bgColor: '#e0f7f5',
-      data: { destination: '北京' }
-    });
-    
-    // 监听范围点击事件
-    calendar.on('rangeClick', (event) => {
-      const { range, date, code, data } = event;
-      console.log('范围代码:', code);
-      this.loadDataByCode(code, date);
-    });
-  },
-  
-  loadDataByCode(code, date) {
-    switch(code) {
-      case 'spring_festival_2024':
-        this.loadHolidayData(date);
-        break;
-      case 'project_dev_phase1':
-        this.loadProjectData(date);
-        break;
-      case 'business_trip_april':
-        this.loadTripData(date);
-        break;
-    }
-  }
-});
+// 日程安排预设
+const scheduleRange = {
+  code: 'meeting-001',
+  name: '团队会议',
+  startDate: '2024-01-22',
+  endDate: '2024-01-22',
+  ...SchedulePreset,
+  type: 'meeting'
+};
+
+dateRangePlugin.load([projectRange, scheduleRange]);
 ```
 
-## API 文档
+### TaroJS 集成示例
 
-### DateRange 接口
+```javascript
+import Taro from '@tarojs/taro';
+import { Component } from 'react';
+import WxCalendar from 'wx-calendar';
+import { DateRangePlugin, ProjectManagementPreset } from '@code066/wc-plugin-daterange';
 
-```typescript
-interface DateRange {
-  name: string;        // 显示的名字
-  code: string;        // 范围代码，用于数据调用
-  startDate: string;   // 开始日期 YYYY-MM-DD
-  endDate: string;     // 结束日期 YYYY-MM-DD
-  color?: string;      // 文字颜色
-  bgColor?: string;    // 背景颜色
-  clickable?: boolean; // 是否可点击，默认 true
-  data?: any;          // 附加数据
+export default class CalendarPage extends Component {
+  componentDidMount() {
+    this.initCalendar();
+  }
+
+  initCalendar() {
+    const calendar = new WxCalendar({
+      container: '#calendar-container',
+      enableTaroOptimization: true
+    });
+
+    // 使用插件
+    calendar.use(DateRangePlugin, {
+      enableTaroOptimization: true,
+      batchUpdateDelay: 100,
+      showContent: true,
+      contentSpanMode: 'span',
+      onRangeClick: this.handleRangeClick.bind(this)
+    });
+
+    this.dateRangePlugin = calendar.getPlugin('dateRange');
+    this.loadData();
+  }
+
+  async loadData() {
+    const ranges = [
+      {
+        code: 'project-001',
+        name: '移动端重构项目',
+        startDate: '2024-01-15',
+        endDate: '2024-02-28',
+        content: '移动端架构重构，预计6周完成',
+        ...ProjectManagementPreset,
+        priority: 'high',
+        status: 'in-progress'
+      }
+    ];
+
+    await this.dateRangePlugin.load(ranges);
+  }
+
+  handleRangeClick(event) {
+    const { range, date } = event;
+    Taro.showModal({
+      title: range.name,
+      content: `日期: ${date}\\n内容: ${range.content || '无'}`
+    });
+  }
 }
 ```
 
-### PluginOptions 配置
-
-```typescript
-interface PluginOptions {
-  ranges: DateRange[];                    // 日期范围数组
-  markAs?: 'schedule' | 'corner' | 'festival'; // 标记类型
-  defaultColor?: string;                  // 默认文字颜色
-  defaultBgColor?: string;               // 默认背景颜色
-  onRangeClick?: (range: DateRange, date: string) => void; // 范围点击回调
-}
-```
+## API 参考
 
 ### 插件方法
 
-```javascript
-const plugin = calendar.getPlugin(DATE_RANGE_PLUGIN_KEY);
-
-// 添加范围
-plugin.addRange({
-  name: '新范围',
-  code: 'new_range_001',
-  startDate: '2024-04-01',
-  endDate: '2024-04-05'
-});
-
-// 删除范围
-plugin.removeRange('new_range_001');
-
-// 更新范围
-plugin.updateRange('new_range_001', {
-  name: '更新的范围',
-  endDate: '2024-04-10'
-});
-
-// 获取范围
-const range = plugin.getRangeByCode('new_range_001');
-const rangesOnDate = plugin.getRangesByDate('2024-04-01');
-const allRanges = plugin.getRanges();
-
-// 清空所有范围
-plugin.clearRanges();
-
-// 刷新显示
-plugin.refresh();
-```
-
-### 事件系统
-
-#### 1. 全局回调
+#### load(ranges)
+批量加载日期范围数据（类似 ICS 插件的 load 方法）
 
 ```javascript
-WxCalendar.use(DateRangePlugin, {
-  onRangeClick: (range, date) => {
-    // 全局范围点击处理
-    console.log('全局点击:', range.code, date);
-  }
-});
-```
-
-#### 2. 自定义事件
-
-```javascript
-calendar.on('rangeClick', (event) => {
-  const { range, date, code, data } = event;
-  // 处理范围点击事件
-});
-```
-
-## 高级配置
-
-### 多类型范围管理
-
-```javascript
-const ranges = [
+const loadedCount = await dateRangePlugin.load([
   {
-    name: '项目A',
-    code: 'project_a_phase1',
-    startDate: '2024-03-01',
-    endDate: '2024-03-15',
-    color: '#3742fa',
-    bgColor: '#e0e5ff',
-    data: { 
-      projectId: 'PA001',
-      phase: 'development',
-      team: 'frontend'
-    }
-  },
-  {
-    name: '维护期',
-    code: 'maintenance_march',
-    startDate: '2024-03-20',
-    endDate: '2024-03-25',
-    color: '#ffa726',
-    bgColor: '#fff3e0',
-    clickable: false, // 不可点击
-    data: { type: 'maintenance' }
+    code: 'range-001',
+    name: '项目开发',
+    startDate: '2024-01-15',
+    endDate: '2024-01-30',
+    content: '项目开发周期'
   }
-];
+]);
 ```
 
-### 动态数据加载
+#### add(range)
+添加单个日期范围
 
 ```javascript
-Page({
-  loadRangeDetails(code, date) {
-    switch(code) {
-      case 'project_a_phase1':
-        return this.getProjectDetails(code, date);
-      case 'maintenance_march':
-        return this.getMaintenanceDetails(code, date);
-      default:
-        return Promise.resolve(null);
-    }
-  },
+dateRangePlugin.add({
+  code: 'new-range',
+  name: '新任务',
+  startDate: '2024-02-01',
+  endDate: '2024-02-05'
+});
+```
+
+#### remove(code)
+删除指定的日期范围
+
+```javascript
+dateRangePlugin.remove('range-001');
+```
+
+#### update(code, updates)
+更新指定的日期范围
+
+```javascript
+dateRangePlugin.update('range-001', {
+  name: '更新的项目名称',
+  endDate: '2024-02-15'
+});
+```
+
+#### clear()
+清空所有日期范围
+
+```javascript
+dateRangePlugin.clear();
+```
+
+#### getInfo()
+获取插件信息和统计数据
+
+```javascript
+const info = dateRangePlugin.getInfo();
+console.log(info.ranges.length); // 范围数量
+```
+
+### 配置选项
+
+```typescript
+interface DateRangeOptions {
+  // TaroJS 优化
+  enableTaroOptimization?: boolean;  // 启用 TaroJS 优化
+  batchUpdateDelay?: number;         // 批量更新延迟（毫秒）
+  maxRangesPerBatch?: number;        // 每批最大范围数量
   
-  async getProjectDetails(code, date) {
-    const res = await wx.request({
-      url: '/api/project/details',
-      data: { code, date }
-    });
-    return res.data;
+  // 显示配置
+  showContent?: boolean;             // 显示内容文本
+  contentSpanMode?: 'tooltip' | 'span'; // 内容显示模式
+  
+  // 样式配置
+  defaultColor?: string;             // 默认文字颜色
+  defaultBgColor?: string;           // 默认背景颜色
+  
+  // 事件回调
+  onRangeClick?: (event) => void;    // 范围点击事件
+  onDateClick?: (event) => void;     // 日期点击事件
+  onRangeAdd?: (range) => void;      // 范围添加事件
+  onRangeRemove?: (code, range) => void; // 范围删除事件
+}
+```
+
+### 数据格式
+
+```typescript
+interface DateRange {
+  code: string;                      // 唯一标识符
+  name: string;                      // 显示名称
+  startDate: string;                 // 开始日期 (YYYY-MM-DD)
+  endDate: string;                   // 结束日期 (YYYY-MM-DD)
+  content?: string;                  // 内容描述
+  color?: string;                    // 文字颜色
+  bgColor?: string;                  // 背景颜色
+  priority?: 'high' | 'medium' | 'low'; // 优先级
+  status?: 'pending' | 'in-progress' | 'completed'; // 状态
+  data?: any;                        // 附加数据
+}
+```
+
+## 预设配置
+
+### ProjectManagementPreset
+项目管理预设，适用于项目开发、任务管理等场景
+
+```javascript
+import { ProjectManagementPreset } from '@code066/wc-plugin-daterange';
+
+const projectRange = {
+  code: 'project-001',
+  name: '移动端重构',
+  startDate: '2024-01-15',
+  endDate: '2024-02-28',
+  ...ProjectManagementPreset,
+  priority: 'high'
+};
+```
+
+### SchedulePreset
+日程安排预设，适用于会议、培训等日程管理
+
+```javascript
+import { SchedulePreset } from '@code066/wc-plugin-daterange';
+
+const meetingRange = {
+  code: 'meeting-001',
+  name: '团队会议',
+  startDate: '2024-01-22',
+  endDate: '2024-01-22',
+  ...SchedulePreset,
+  type: 'meeting'
+};
+```
+
+### HolidayPreset
+假期预设，适用于节假日、休假等场景
+
+```javascript
+import { HolidayPreset } from '@code066/wc-plugin-daterange';
+
+const holidayRange = {
+  code: 'holiday-001',
+  name: '春节假期',
+  startDate: '2024-02-10',
+  endDate: '2024-02-17',
+  ...HolidayPreset
+};
+```
+
+## 高级特性
+
+### 跨日期连续显示
+支持甘特图效果的跨日期连续显示
+
+```javascript
+calendar.use(DateRangePlugin, {
+  contentSpanMode: 'span',  // 启用跨日期显示
+  showContent: true
+});
+```
+
+### 批量操作优化
+针对大量数据的批量操作优化
+
+```javascript
+// 批量加载大量数据
+const ranges = generateLargeDataSet(); // 假设有1000+条数据
+await dateRangePlugin.load(ranges); // 自动分批处理
+```
+
+### TaroJS 生命周期优化
+自动适配 TaroJS 页面生命周期
+
+```javascript
+// 插件会自动监听页面 onHide/onShow 事件
+// 在页面隐藏时暂停更新，显示时恢复更新
+calendar.use(DateRangePlugin, {
+  enableTaroOptimization: true
+});
+```
+
+## 性能优化
+
+### 批量更新
+```javascript
+// 设置批量更新延迟，避免频繁重绘
+calendar.use(DateRangePlugin, {
+  batchUpdateDelay: 100,      // 100ms 延迟
+  maxRangesPerBatch: 50       // 每批最多50个范围
+});
+```
+
+### 资源清理
+```javascript
+// 组件销毁时自动清理资源
+componentWillUnmount() {
+  if (this.dateRangePlugin) {
+    this.dateRangePlugin.destroy();
+  }
+}
+```
+
+## 事件处理
+
+### 范围点击事件
+```javascript
+calendar.use(DateRangePlugin, {
+  onRangeClick: (event) => {
+    const { range, date } = event;
+    console.log(`点击了范围 ${range.name} 的 ${date} 日期`);
   }
 });
 ```
 
-## 注意事项
+### 日期点击事件
+```javascript
+calendar.use(DateRangePlugin, {
+  onDateClick: (event) => {
+    const { date, ranges } = event;
+    console.log(`点击了 ${date}，包含 ${ranges.length} 个范围`);
+  }
+});
+```
 
-⚠️ **重要**：一定要将相关域名配置到小程序后台合法域名（如果需要请求外部数据）
+## 样式自定义
 
-操作：小程序后台 -> 开发 -> 开发设置 -> 服务器域名
+### 基础样式
+```css
+.date-range-mark {
+  border-radius: 8rpx;
+  transition: all 0.3s ease;
+}
 
-## 兼容性
+.date-range-mark.range-start {
+  border-top-left-radius: 50%;
+  border-bottom-left-radius: 50%;
+}
 
-- 支持 wx-calendar v1.6.0+
-- 兼容微信小程序环境
-- 支持 TypeScript
-- 支持 CommonJS 和 ES6 模块
+.date-range-mark.range-end {
+  border-top-right-radius: 50%;
+  border-bottom-right-radius: 50%;
+}
+```
+
+### 优先级指示器
+```css
+.date-range-mark.priority-high::after {
+  content: '';
+  position: absolute;
+  top: 2rpx;
+  right: 2rpx;
+  width: 8rpx;
+  height: 8rpx;
+  background: #f44336;
+  border-radius: 50%;
+}
+```
+
+## 常见问题
+
+### Q: 如何处理大量数据？
+A: 使用 `load` 方法批量加载，插件会自动分批处理以保证性能。
+
+### Q: 如何自定义样式？
+A: 可以通过 CSS 覆盖默认样式，或使用预设配置快速应用主题。
+
+### Q: 如何在 TaroJS 中优化性能？
+A: 启用 `enableTaroOptimization` 选项，插件会自动适配页面生命周期。
+
+### Q: 支持哪些日期格式？
+A: 目前支持 YYYY-MM-DD 格式，如 '2024-01-15'。
+
+## 更新日志
+
+### v2.0.0
+- 🎉 重构插件架构，参考 wc-plugin-ics 设计模式
+- ⚡ 新增 TaroJS 优化支持
+- 📦 新增预设配置支持
+- 🚀 性能优化和批量操作支持
+- 📱 改进微信小程序兼容性
+
+### v1.x.x
+- 基础日期范围功能
+- 自定义样式支持
+- 事件处理机制
 
 ## 许可证
 
 MIT License
 
-## 更新日志
+## 贡献
 
-### v1.0.0
-- 初始版本发布
-- 支持日期范围标记
-- 支持点击交互
-- 支持动态管理
-- 提供 TypeScript 类型定义
+欢迎提交 Issue 和 Pull Request！
+
+## 相关项目
+
+- [wx-calendar](https://github.com/lspriv/wx-calendar) - 微信小程序日历组件
+- [wc-plugin-ics](https://github.com/lspriv/wc-plugin-ics) - ICS 日历订阅插件
+- [TaroJS](https://taro.aotu.io/) - 多端统一开发框架

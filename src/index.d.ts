@@ -1,198 +1,79 @@
 /**
- * wx-calendar 日期范围插件 TypeScript 类型定义
+ * TypeScript 类型定义文件
+ * 参考 wc-plugin-ics 的设计模式
  */
 
-export interface ContentItem {
-  /** 显示文本 */
-  text: string;
-  /** 文字颜色 */
-  color?: string;
-  /** 背景颜色 */
-  bgColor?: string;
-  /** 背景颜色（别名） */
-  backgroundColor?: string;
-  /** 自定义样式 */
-  style?: {
-    fontSize?: string;
-    padding?: string;
-    borderRadius?: string;
-    lineHeight?: string;
-    [key: string]: any;
-  };
-}
-
 export interface DateRange {
-  /** 显示的名字 */
-  name: string;
-  /** 范围代码，用于数据调用 */
+  /** 唯一标识符 */
   code: string;
-  /** 开始日期 YYYY-MM-DD */
+  /** 显示名称 */
+  name: string;
+  /** 开始日期 (YYYY-MM-DD) */
   startDate: string;
-  /** 结束日期 YYYY-MM-DD */
+  /** 结束日期 (YYYY-MM-DD) */
   endDate: string;
+  /** 内容描述 */
+  content?: string;
   /** 文字颜色 */
   color?: string;
   /** 背景颜色 */
   bgColor?: string;
-  /** 唯一标识符 */
-  key?: string;
-  /** 是否可点击，默认 true */
-  clickable?: boolean;
+  /** 优先级 */
+  priority?: 'high' | 'medium' | 'low';
+  /** 状态 */
+  status?: 'pending' | 'in-progress' | 'completed';
   /** 附加数据 */
   data?: any;
-  /** 单个内容项 */
-  content?: string | ContentItem;
-  /** 多个内容项 */
-  contents?: (string | ContentItem)[];
 }
 
-export interface PluginOptions {
-  /** 日期范围数组 */
-  ranges: DateRange[];
-  /** 标记类型 */
-  markAs?: 'schedule' | 'corner' | 'festival';
+export interface DateRangeOptions {
+  // TaroJS 优化
+  /** 启用 TaroJS 优化 */
+  enableTaroOptimization?: boolean;
+  /** 批量更新延迟（毫秒） */
+  batchUpdateDelay?: number;
+  /** 每批最大范围数量 */
+  maxRangesPerBatch?: number;
+  
+  // 显示配置
+  /** 显示内容文本 */
+  showContent?: boolean;
+  /** 内容显示模式 */
+  contentSpanMode?: 'tooltip' | 'span';
+  
+  // 样式配置
   /** 默认文字颜色 */
   defaultColor?: string;
   /** 默认背景颜色 */
   defaultBgColor?: string;
-  /** 范围点击回调 */
-  onRangeClick?: (range: DateRange, date: string) => void;
-  /** 是否显示内容 */
-  showContent?: boolean;
-  /** 内容标记类型 */
-  contentMarkAs?: 'schedule' | 'corner' | 'festival';
-  /** 内容默认文字颜色 */
-  contentDefaultColor?: string;
-  /** 内容默认背景颜色 */
-  contentDefaultBgColor?: string;
-  /** 内容默认字体大小 */
-  contentDefaultFontSize?: string;
-  /** 内容默认内边距 */
-  contentDefaultPadding?: string;
-  /** 内容默认圆角 */
-  contentDefaultBorderRadius?: string;
-  /** 内容默认行高 */
-  contentDefaultLineHeight?: string;
-  /** 最大内容行数 */
-  maxContentLines?: number;
-  /** 内容显示模式 */
-  contentSpanMode?: 'single' | 'span';
-  /** 内容对齐方式 */
-  contentAlignment?: 'left' | 'center' | 'right';
-  /** 跨日期内容样式 */
-  spanContentStyle?: {
-    backgroundColor?: string;
-    border?: string;
-    padding?: string;
-    fontSize?: string;
-    color?: string;
-    boxShadow?: string;
-    zIndex?: number;
-    borderRadius?: string;
-    lineHeight?: string;
-  };
+  
+  // 事件回调
+  /** 范围点击事件 */
+  onRangeClick?: (event: RangeClickEvent) => void;
+  /** 日期点击事件 */
+  onDateClick?: (event: DateClickEvent) => void;
+  /** 范围添加事件 */
+  onRangeAdd?: (range: DateRange) => void;
+  /** 范围删除事件 */
+  onRangeRemove?: (code: string, range: DateRange) => void;
 }
 
 export interface RangeClickEvent {
-  /** 范围信息 */
+  /** 点击的范围 */
   range: DateRange;
   /** 点击的日期 */
   date: string;
-  /** 范围代码 */
-  code: string;
-  /** 附加数据 */
-  data?: any;
+  /** 原始事件 */
+  originalEvent?: any;
 }
 
-export interface CalendarMark {
-  /** 日期 */
+export interface DateClickEvent {
+  /** 点击的日期 */
   date: string;
-  /** 标记类型 */
-  type: 'schedule' | 'corner' | 'festival';
-  /** 显示文本 */
-  text: string;
-  /** 样式 */
-  style: {
-    color: string;
-    backgroundColor: string;
-    cursor: string;
-    fontSize?: string;
-    padding?: string;
-    borderRadius?: string;
-    lineHeight?: string;
-    position?: string;
-    whiteSpace?: string;
-    overflow?: string;
-    textOverflow?: string;
-    border?: string;
-    borderLeft?: string;
-    borderRight?: string;
-    boxShadow?: string;
-    zIndex?: number;
-    opacity?: string;
-    [key: string]: any;
-  };
-  /** 标记键 */
-  key: string;
-  /** 是否可点击 */
-  clickable: boolean;
-  /** 范围代码 */
-  rangeCode: string;
-  /** 范围数据 */
-  rangeData?: any;
-  /** 标记类型：range 或 content */
-  markType?: 'range' | 'content' | 'span-content';
-  /** 内容索引（仅 content 类型） */
-  contentIndex?: number;
-  /** 周索引（仅 span-content 类型） */
-  weekIndex?: number;
-  /** 层级索引（用于多行显示避免重叠） */
-  layer?: number;
-  /** 周组信息（仅 span-content 类型） */
-  weekGroup?: {
-    weekIndex: number;
-    weekStartDate: string;
-    weekEndDate: string;
-    days: number;
-    startDayOfWeek: number;
-    isFirstWeek: boolean;
-    isLastWeek: boolean;
-    dates: string[];
-  };
-  /** 跨度维度信息 */
-  spanDimensions?: {
-    totalDays: number;
-    weekGroups: Array<{
-      weekIndex: number;
-      weekStartDate: string;
-      weekEndDate: string;
-      days: number;
-      startDayOfWeek: number;
-      isFirstWeek: boolean;
-      isLastWeek: boolean;
-      dates: string[];
-    }>;
-    alignment: 'left' | 'center' | 'right';
-  };
-  /** 跨度信息 */
-  spanInfo?: {
-    totalDays: number;
-    weekGroups: Array<{
-      weekIndex: number;
-      weekStartDate: string;
-      weekEndDate: string;
-      days: number;
-      startDayOfWeek: number;
-      isFirstWeek: boolean;
-      isLastWeek: boolean;
-      dates: string[];
-    }>;
-    alignment: 'left' | 'center' | 'right';
-    isMultiWeek: boolean;
-    currentWeek: number;
-    totalWeeks: number;
-    layer?: number;
-  };
+  /** 该日期包含的范围 */
+  ranges: DateRange[];
+  /** 原始事件 */
+  originalEvent?: any;
 }
 
 export interface PluginInfo {
@@ -200,63 +81,139 @@ export interface PluginInfo {
   name: string;
   /** 插件版本 */
   version: string;
-  /** 插件键 */
-  key: string;
-  /** 范围数量 */
-  rangeCount: number;
-  /** 总日期数 */
-  totalDates: number;
+  /** 范围列表 */
+  ranges: DateRange[];
+  /** 配置选项 */
+  options: DateRangeOptions;
 }
 
+export interface PresetConfig {
+  /** 默认颜色 */
+  color: string;
+  /** 默认背景颜色 */
+  bgColor: string;
+  /** 显示内容 */
+  showContent: boolean;
+  /** 内容显示模式 */
+  contentSpanMode: 'tooltip' | 'span';
+  /** 其他配置 */
+  [key: string]: any;
+}
+
+/**
+ * 日期范围插件类
+ */
 export declare class DateRangePlugin {
-  constructor(calendar: any, options?: PluginOptions);
+  constructor(calendar: any, options?: DateRangeOptions);
   
-  /** 初始化插件 */
-  init(): void;
+  /**
+   * 批量加载日期范围数据
+   * @param ranges 日期范围数组
+   * @returns 加载的范围数量
+   */
+  load(ranges: DateRange[]): Promise<number>;
   
-  /** 验证范围数据 */
-  validateRanges(): void;
+  /**
+   * 添加单个日期范围
+   * @param range 日期范围
+   */
+  add(range: DateRange): void;
   
-  /** 生成标记数据 */
-  generateMarks(): CalendarMark[];
+  /**
+   * 删除指定的日期范围
+   * @param code 范围代码
+   */
+  remove(code: string): void;
   
-  /** 绑定点击事件 */
-  bindClickEvents(): void;
+  /**
+   * 更新指定的日期范围
+   * @param code 范围代码
+   * @param updates 更新数据
+   */
+  update(code: string, updates: Partial<DateRange>): void;
   
-  /** 获取两个日期之间的所有日期 */
-  getDatesBetween(startDate: string, endDate: string): string[];
+  /**
+   * 清空所有日期范围
+   */
+  clear(): void;
   
-  /** 动态添加范围 */
-  addRange(range: DateRange): DateRangePlugin;
+  /**
+   * 刷新日历显示
+   */
+  refresh(): void;
   
-  /** 根据code删除范围 */
-  removeRange(code: string): boolean;
-  
-  /** 更新范围 */
-  updateRange(code: string, newRange: DateRange): DateRangePlugin;
-  
-  /** 根据code获取范围 */
-  getRangeByCode(code: string): DateRange | undefined;
-  
-  /** 获取指定日期的所有范围 */
-  getRangesByDate(date: string): DateRange[];
-  
-  /** 获取所有范围 */
-  getRanges(): DateRange[];
-  
-  /** 清空所有范围 */
-  clearRanges(): DateRangePlugin;
-  
-  /** 刷新标记 */
-  refresh(): DateRangePlugin;
-  
-  /** 销毁插件 */
-  destroy(): void;
-  
-  /** 获取插件信息 */
+  /**
+   * 获取插件信息和统计数据
+   */
   getInfo(): PluginInfo;
+  
+  /**
+   * 获取指定日期的范围
+   * @param date 日期字符串
+   */
+  getRangesForDate(date: string): DateRange[];
+  
+  /**
+   * 获取指定代码的范围
+   * @param code 范围代码
+   */
+  getRange(code: string): DateRange | null;
+  
+  /**
+   * 检查日期是否在范围内
+   * @param date 日期字符串
+   * @param range 日期范围
+   */
+  isDateInRange(date: string, range: DateRange): boolean;
+  
+  /**
+   * 暂停更新
+   */
+  pause(): void;
+  
+  /**
+   * 恢复更新
+   */
+  resume(): void;
+  
+  /**
+   * 销毁插件
+   */
+  destroy(): void;
 }
 
+/**
+ * 插件标识符
+ */
 export declare const DATE_RANGE_PLUGIN_KEY: string;
 
+/**
+ * 项目管理预设
+ */
+export declare const ProjectManagementPreset: PresetConfig;
+
+/**
+ * 日程安排预设
+ */
+export declare const SchedulePreset: PresetConfig;
+
+/**
+ * 假期预设
+ */
+export declare const HolidayPreset: PresetConfig;
+
+/**
+ * 获取预设配置
+ * @param presetName 预设名称
+ */
+export declare function getPreset(presetName: string): PresetConfig | null;
+
+/**
+ * 合并预设配置和选项
+ * @param preset 预设配置
+ * @param options 用户选项
+ */
+export declare function mergePresetWithOptions(preset: PresetConfig, options: Partial<DateRangeOptions>): DateRangeOptions;
+
+// 默认导出
 export default DateRangePlugin;

@@ -1,16 +1,20 @@
 {
   "name": "@code066/wc-plugin-daterange",
-  "version": "1.0.0",
-  "description": "微信小程序日历组件 wx-calendar 日期范围标记插件",
+  "version": "2.0.0",
+  "description": "微信小程序日历日期范围插件，参考 wc-plugin-ics 设计模式，专为 TaroJS 微信小程序开发优化",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "miniprogram": "lib",
   "files": [
     "lib/**/*",
+    "src/**/*",
+    "examples/**/*",
     "README.md"
   ],
   "scripts": {
-    "build": "node scripts/build.js"
+    "build": "node scripts/build.js",
+    "dev": "node scripts/build.js --watch",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
     "wechat",
@@ -18,7 +22,13 @@
     "calendar",
     "date-range",
     "wx-calendar",
-    "plugin"
+    "plugin",
+    "tarojs",
+    "taro",
+    "gantt",
+    "schedule",
+    "project-management",
+    "wc-plugin-ics"
   ],
   "author": "code066",
   "license": "MIT",
