@@ -1,0 +1,32 @@
+{
+  "name": "@code066/wc-plugin-daterange",
+  "version": "1.0.0",
+  "description": "微信小程序日历组件 wx-calendar 日期范围标记插件",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "miniprogram": "lib",
+  "files": [
+    "lib/**/*",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "node scripts/build.js"
+  },
+  "keywords": [
+    "wechat",
+    "miniprogram",
+    "calendar",
+    "date-range",
+    "wx-calendar",
+    "plugin"
+  ],
+  "author": "code066",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/code066/wc-plugin-daterange.git"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
