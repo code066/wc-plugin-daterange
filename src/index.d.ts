@@ -2,6 +2,25 @@
  * wx-calendar 日期范围插件 TypeScript 类型定义
  */
 
+export interface ContentItem {
+  /** 显示文本 */
+  text: string;
+  /** 文字颜色 */
+  color?: string;
+  /** 背景颜色 */
+  bgColor?: string;
+  /** 背景颜色（别名） */
+  backgroundColor?: string;
+  /** 自定义样式 */
+  style?: {
+    fontSize?: string;
+    padding?: string;
+    borderRadius?: string;
+    lineHeight?: string;
+    [key: string]: any;
+  };
+}
+
 export interface DateRange {
   /** 显示的名字 */
   name: string;
@@ -21,6 +40,10 @@ export interface DateRange {
   clickable?: boolean;
   /** 附加数据 */
   data?: any;
+  /** 单个内容项 */
+  content?: string | ContentItem;
+  /** 多个内容项 */
+  contents?: (string | ContentItem)[];
 }
 
 export interface PluginOptions {
@@ -34,6 +57,24 @@ export interface PluginOptions {
   defaultBgColor?: string;
   /** 范围点击回调 */
   onRangeClick?: (range: DateRange, date: string) => void;
+  /** 是否显示内容 */
+  showContent?: boolean;
+  /** 内容标记类型 */
+  contentMarkAs?: 'schedule' | 'corner' | 'festival';
+  /** 内容默认文字颜色 */
+  contentDefaultColor?: string;
+  /** 内容默认背景颜色 */
+  contentDefaultBgColor?: string;
+  /** 内容默认字体大小 */
+  contentDefaultFontSize?: string;
+  /** 内容默认内边距 */
+  contentDefaultPadding?: string;
+  /** 内容默认圆角 */
+  contentDefaultBorderRadius?: string;
+  /** 内容默认行高 */
+  contentDefaultLineHeight?: string;
+  /** 最大内容行数 */
+  maxContentLines?: number;
 }
 
 export interface RangeClickEvent {
@@ -59,6 +100,11 @@ export interface CalendarMark {
     color: string;
     backgroundColor: string;
     cursor: string;
+    fontSize?: string;
+    padding?: string;
+    borderRadius?: string;
+    lineHeight?: string;
+    [key: string]: any;
   };
   /** 标记键 */
   key: string;
@@ -68,6 +114,10 @@ export interface CalendarMark {
   rangeCode: string;
   /** 范围数据 */
   rangeData?: any;
+  /** 标记类型：range 或 content */
+  markType?: 'range' | 'content';
+  /** 内容索引（仅 content 类型） */
+  contentIndex?: number;
 }
 
 export interface PluginInfo {
