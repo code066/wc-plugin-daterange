@@ -3,299 +3,395 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>跨日期内容显示演示 - wc-plugin-daterange</title>
+    <title>跨日期连续显示演示</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
             padding: 20px;
-            background-color: #f5f5f5;
         }
-        
+
         .container {
             max-width: 1200px;
             margin: 0 auto;
             background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
             overflow: hidden;
         }
-        
+
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
             color: white;
             padding: 30px;
             text-align: center;
         }
-        
+
         .header h1 {
-            margin: 0 0 10px 0;
-            font-size: 28px;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
         }
-        
+
         .header p {
-            margin: 0;
+            font-size: 1.2em;
             opacity: 0.9;
-            font-size: 16px;
         }
-        
-        .demo-section {
+
+        .controls {
+            padding: 20px 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .control-group label {
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: 2px solid #4a90e2;
+            background: white;
+            color: #4a90e2;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background: #4a90e2;
+            color: white;
+        }
+
+        .btn.active {
+            background: #4a90e2;
+            color: white;
+        }
+
+        .calendar-container {
             padding: 30px;
         }
-        
-        .calendar-container {
-            background: #fff;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 30px;
-        }
-        
+
         .calendar-grid {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
             gap: 1px;
-            background-color: #e0e0e0;
-            border: 1px solid #e0e0e0;
-            border-radius: 4px;
+            background: #e9ecef;
+            border-radius: 10px;
             overflow: hidden;
+            margin-top: 20px;
         }
-        
+
         .calendar-header {
-            background-color: #f8f9fa;
-            padding: 12px 8px;
+            background: #4a90e2;
+            color: white;
+            padding: 15px;
             text-align: center;
             font-weight: 600;
-            font-size: 14px;
-            color: #495057;
         }
-        
+
         .calendar-day {
-            background-color: white;
-            min-height: 80px;
+            background: white;
+            min-height: 120px;
             padding: 8px;
             position: relative;
-            border: 1px solid #f0f0f0;
+            border: 1px solid #e9ecef;
         }
-        
+
+        .calendar-day.other-month {
+            background: #f8f9fa;
+            color: #6c757d;
+        }
+
+        .calendar-day.today {
+            background: #fff3cd;
+            border-color: #ffc107;
+        }
+
         .day-number {
-            font-size: 14px;
-            font-weight: 500;
-            color: #333;
-            margin-bottom: 4px;
+            font-weight: 600;
+            margin-bottom: 5px;
         }
-        
-        .range-mark {
-            background-color: #e6f3ff;
-            border: 1px solid #4a90e2;
-            border-radius: 3px;
-            padding: 2px 6px;
-            margin: 1px 0;
-            font-size: 11px;
-            color: #2c5aa0;
-            cursor: pointer;
-            transition: all 0.2s;
+
+        .day-content {
+            position: relative;
+            height: calc(100% - 25px);
         }
-        
-        .range-mark:hover {
-            background-color: #d1e7ff;
-            transform: translateY(-1px);
-        }
-        
-        .span-content-mark {
+
+        .content-mark {
             position: absolute;
-            background-color: #f0f8ff;
-            border: 1px solid #4a90e2;
+            background: #4a90e2;
+            color: white;
+            font-size: 11px;
+            padding: 4px 8px;
             border-radius: 4px;
-            padding: 2px 8px;
-            font-size: 12px;
-            color: #2c5aa0;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            z-index: 10;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.2s ease;
         }
-        
-        .span-content-mark:hover {
-            background-color: #e6f3ff;
+
+        .content-mark:hover {
             transform: translateY(-1px);
-            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
         }
-        
-        .controls {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            margin-bottom: 30px;
-            padding: 20px;
-            background-color: #f8f9fa;
-            border-radius: 8px;
-        }
-        
-        .control-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-        
-        .control-group label {
-            font-weight: 600;
-            font-size: 14px;
-            color: #495057;
-        }
-        
-        button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+
+        .span-content-mark {
+            position: absolute;
+            background: #4a90e2;
             color: white;
-            border: none;
-            padding: 10px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.2s;
-        }
-        
-        button:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-        }
-        
-        button:active {
-            transform: translateY(0);
-        }
-        
-        select {
-            padding: 8px 12px;
-            border: 1px solid #ddd;
+            font-size: 11px;
+            padding: 4px 8px;
             border-radius: 4px;
-            font-size: 14px;
-            background-color: white;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            z-index: 10;
         }
-        
+
+        .span-content-mark:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            z-index: 20;
+        }
+
         .info-panel {
-            background-color: #f8f9fa;
-            border-left: 4px solid #667eea;
+            background: #e3f2fd;
             padding: 20px;
+            border-radius: 10px;
             margin-bottom: 20px;
+            border-left: 4px solid #2196f3;
         }
-        
+
         .info-panel h3 {
-            margin: 0 0 10px 0;
-            color: #495057;
+            color: #1976d2;
+            margin-bottom: 10px;
         }
-        
+
         .info-panel p {
-            margin: 0;
-            color: #6c757d;
-            line-height: 1.5;
+            color: #424242;
+            line-height: 1.6;
         }
-        
-        .feature-list {
+
+        .stats {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 20px;
-            margin-top: 30px;
+            margin-top: 20px;
         }
-        
-        .feature-item {
+
+        .stat-card {
             background: white;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
             padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
         }
-        
-        .feature-item h4 {
-            margin: 0 0 10px 0;
-            color: #495057;
+
+        .stat-card h4 {
+            color: #4a90e2;
+            margin-bottom: 10px;
         }
-        
-        .feature-item p {
-            margin: 0;
-            color: #6c757d;
-            font-size: 14px;
-            line-height: 1.5;
-        }
-        
-        .status-indicator {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            margin-right: 8px;
-        }
-        
-        .status-span { background-color: #28a745; }
-        .status-single { background-color: #ffc107; }
-        
-        .code-example {
-            background-color: #f8f9fa;
-            border: 1px solid #e9ecef;
-            border-radius: 6px;
-            padding: 20px;
-            margin: 20px 0;
-            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-            font-size: 13px;
-            line-height: 1.5;
-            overflow-x: auto;
-        }
-        
-        .highlight {
-            background-color: #fff3cd;
-            padding: 2px 4px;
-            border-radius: 3px;
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #2c3e50;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>跨日期内容显示演示</h1>
-            <p>wc-plugin-daterange 插件 - 甘特图式内容展示功能</p>
+            <h1>跨日期连续显示演示</h1>
+            <p>展示任务在日历中的连续条形图显示效果，类似甘特图</p>
         </div>
-        
-        <div class="demo-section">
+
+        <div class="controls">
+            <div class="control-group">
+                <label>显示模式:</label>
+                <button class="btn active" onclick="toggleSpanMode('span')">连续模式</button>
+                <button class="btn" onclick="toggleSpanMode('single')">单日模式</button>
+            </div>
+            <div class="control-group">
+                <label>对齐方式:</label>
+                <button class="btn" onclick="changeAlignment('left')">左对齐</button>
+                <button class="btn" onclick="changeAlignment('center')">居中</button>
+                <button class="btn" onclick="changeAlignment('right')">右对齐</button>
+            </div>
+            <div class="control-group">
+                <button class="btn" onclick="addLongTermTask()">添加长期任务</button>
+            </div>
+        </div>
+
+        <div class="calendar-container">
             <div class="info-panel">
-                <h3>功能说明</h3>
-                <p>此演示展示了如何使用 wc-plugin-daterange 插件实现内容跨多个日期显示，类似甘特图的效果。内容可以从起始日期开始，横跨整个日期范围，并支持左对齐、居中、右对齐等不同的显示方式。</p>
+                <h3>🎯 跨日期连续显示特性</h3>
+                <p>任务从开始日期到结束日期形成连续的条形图，跨越多个日期格子。当任务跨越多周时，会在每周显示对应的部分，但视觉上保持连续性。这种显示方式类似甘特图，能够清晰地展示任务的时间跨度。</p>
             </div>
-            
-            <div class="controls">
-                <div class="control-group">
-                    <label>显示模式</label>
-                    <button onclick="toggleSpanMode()">
-                        <span class="status-indicator status-span"></span>
-                        <span id="spanModeText">跨日期模式</span>
-                    </button>
+
+            <div class="calendar-grid" id="calendar">
+                <!-- 日历头部 -->
+                <div class="calendar-header">日</div>
+                <div class="calendar-header">一</div>
+                <div class="calendar-header">二</div>
+                <div class="calendar-header">三</div>
+                <div class="calendar-header">四</div>
+                <div class="calendar-header">五</div>
+                <div class="calendar-header">六</div>
+            </div>
+
+            <div class="stats">
+                <div class="stat-card">
+                    <h4>📅 总任务数</h4>
+                    <div class="stat-value" id="totalTasks">0</div>
                 </div>
-                
-                <div class="control-group">
-                    <label>对齐方式</label>
-                    <select id="alignmentSelect" onchange="changeAlignment()">
-                        <option value="left">左对齐</option>
-                        <option value="center">居中对齐</option>
-                        <option value="right">右对齐</option>
-                    </select>
+                <div class="stat-card">
+                    <h4>🔄 跨日期任务</h4>
+                    <div class="stat-value" id="spanTasks">0</div>
                 </div>
-                
-                <div class="control-group">
-                    <label>操作</label>
-                    <button onclick="addLongTermTask()">添加长期任务</button>
+                <div class="stat-card">
+                    <h4>📊 平均跨度</h4>
+                    <div class="stat-value" id="avgSpan">0</div>
                 </div>
-                
-                <div class="control-group">
-                    <label>样式</label>
-                    <button onclick="updateContentStyle()">更新内容样式</button>
+                <div class="stat-card">
+                    <h4>📈 最大跨度</h4>
+                    <div class="stat-value" id="maxSpan">0</div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <script>
+        // 示例数据 - 跨日期任务
+        const demoRanges = [
+            {
+                code: 'project-alpha',
+                name: '项目Alpha开发',
+                startDate: '2025-08-01',
+                endDate: '2025-08-08',
+                color: '#fff',
+                bgColor: '#4a90e2',
+                content: '项目Alpha - 核心功能开发'
+            },
+            {
+                code: 'design-phase',
+                name: '设计阶段',
+                startDate: '2025-08-05',
+                endDate: '2025-08-12',
+                color: '#fff',
+                bgColor: '#7b68ee',
+                content: 'UI/UX设计与原型制作'
+            },
+            {
+                code: 'testing-phase',
+                name: '测试阶段',
+                startDate: '2025-08-10',
+                endDate: '2025-08-18',
+                color: '#fff',
+                bgColor: '#32cd32',
+                content: '功能测试与质量保证'
+            },
+            {
+                code: 'deployment',
+                name: '部署上线',
+                startDate: '2025-08-15',
+                endDate: '2025-08-22',
+                color: '#fff',
+                bgColor: '#ff6347',
+                content: '生产环境部署与监控'
+            },
+            {
+                code: 'cross-month',
+                name: '跨月项目',
+                startDate: '2025-08-25',
+                endDate: '2025-09-05',
+                color: '#fff',
+                bgColor: '#ff9500',
+                content: '跨月长期项目'
+            }
+        ];
+
+        // 当前配置
+        let currentSpanMode = 'span';
+        let currentAlignment = 'left';
+        let ranges = [...demoRanges];
+
+        // 计算跨日期任务的连续显示
+        function calculateSpanDisplay(range) {
+            const startDate = new Date(range.startDate);
+            const endDate = new Date(range.endDate);
+            const spans = [];
+
+            // 按周分组计算
+            let currentDate = new Date(startDate);
+            while (currentDate <= endDate) {
+                const weekStart = new Date(currentDate);
+                weekStart.setDate(weekStart.getDate() - weekStart.getDay()); // 周日
+
+                const weekEnd = new Date(weekStart);
+                weekEnd.setDate(weekEnd.getDate() + 6); // 周六
+
+                const spanStart = new Date(Math.max(currentDate.getTime(), weekStart.getTime()));
+                const spanEnd = new Date(Math.min(endDate.getTime(), weekEnd.getTime()));
+
+                if (spanStart <= spanEnd) {
+                    spans.push({
+                        startDate: spanStart.toISOString().split('T')[0],
+                        endDate: spanEnd.toISOString().split('T')[0],
+                        isFirstWeek: currentDate.getTime() === startDate.getTime(),
+                        isLastWeek: spanEnd.getTime() === endDate.getTime()
+                    });
+                }
+
+                // 移动到下一周
+                currentDate = new Date(weekEnd);
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+
+            return spans;
+        }
+
+        // 生成日历
+        function generateCalendar() {
+            const calendar = document.getElementById('calendar');
+            const existingDays = calendar.querySelectorAll('.calendar-day');
             
-            <div class="calendar-container">
-                <h3>项目管理甘特图 - 2025年8月</h3>
-                <div class="calendar-grid" id="calendar">
-                    <!-- 日历头部 -->
+            // 清除现有内容标记，保留日期结构
+            existingDays.forEach(day => {
+                const dayContent = day.querySelector('.day-content');
+                if (dayContent) {
+                    dayContent.innerHTML = '';
+                }
+            });
+
+            // 如果没有日期结构，创建日历
+            if (existingDays.length === 0) {
+                calendar.innerHTML = `
                     <div class="calendar-header">日</div>
                     <div class="calendar-header">一</div>
                     <div class="calendar-header">二</div>
@@ -303,220 +399,215 @@
                     <div class="calendar-header">四</div>
                     <div class="calendar-header">五</div>
                     <div class="calendar-header">六</div>
-                    
-                    <!-- 日历日期 -->
-                    <!-- 这里会通过 JavaScript 动态生成 -->
-                </div>
-            </div>
-            
-            <div class="code-example">
-                <strong>配置示例：</strong><br>
-                <span class="highlight">contentSpanMode: 'span'</span> - 启用跨日期显示<br>
-                <span class="highlight">contentAlignment: 'left'</span> - 内容左对齐<br>
-                <span class="highlight">spanContentStyle</span> - 自定义跨日期内容样式
-            </div>
-            
-            <div class="feature-list">
-                <div class="feature-item">
-                    <h4>🎯 跨日期显示</h4>
-                    <p>内容可以从起始日期开始，横跨整个日期范围，类似甘特图的任务条。</p>
-                </div>
-                
-                <div class="feature-item">
-                    <h4>📐 灵活对齐</h4>
-                    <p>支持左对齐、居中对齐、右对齐三种对齐方式，满足不同的显示需求。</p>
-                </div>
-                
-                <div class="feature-item">
-                    <h4>🎨 样式定制</h4>
-                    <p>提供丰富的样式配置选项，包括背景色、边框、字体、阴影等。</p>
-                </div>
-                
-                <div class="feature-item">
-                    <h4>📱 响应式设计</h4>
-                    <p>自动适应不同屏幕尺寸，确保在各种设备上都有良好的显示效果。</p>
-                </div>
-                
-                <div class="feature-item">
-                    <h4>⚡ 动态操作</h4>
-                    <p>支持动态切换显示模式、更新样式、添加/删除任务等操作。</p>
-                </div>
-                
-                <div class="feature-item">
-                    <h4>🔧 向后兼容</h4>
-                    <p>完全兼容原有的单日期内容显示功能，无需修改现有代码。</p>
-                </div>
-            </div>
-        </div>
-    </div>
+                `;
 
-    <script>
-        // 模拟插件功能
-        let currentSpanMode = 'span';
-        let currentAlignment = 'left';
-        
-        // 示例数据
-        const projectData = [
-            {
-                code: 'project-planning',
-                name: '项目规划',
-                startDate: '2025-08-01',
-                endDate: '2025-08-05',
-                content: '需求分析、技术选型、团队组建',
-                color: '#4a90e2'
-            },
-            {
-                code: 'ui-design',
-                name: 'UI设计',
-                startDate: '2025-08-04',
-                endDate: '2025-08-08',
-                content: '原型设计、视觉设计、交互设计',
-                color: '#7b68ee'
-            },
-            {
-                code: 'frontend-dev',
-                name: '前端开发',
-                startDate: '2025-08-07',
-                endDate: '2025-08-15',
-                content: '组件开发、页面实现、API对接',
-                color: '#32cd32'
-            },
-            {
-                code: 'backend-dev',
-                name: '后端开发',
-                startDate: '2025-08-06',
-                endDate: '2025-08-18',
-                content: '数据库设计、API开发、服务部署',
-                color: '#ff6347'
-            },
-            {
-                code: 'testing',
-                name: '测试阶段',
-                startDate: '2025-08-12',
-                endDate: '2025-08-20',
-                content: '功能测试、性能测试、用户验收测试',
-                color: '#ffa500'
+                // 生成2025年8月的日历
+                const year = 2025;
+                const month = 7; // 8月 (0-based)
+                
+                const firstDay = new Date(year, month, 1);
+                const lastDay = new Date(year, month + 1, 0);
+                const startDate = new Date(firstDay);
+                startDate.setDate(startDate.getDate() - firstDay.getDay());
+                
+                const endDate = new Date(lastDay);
+                endDate.setDate(endDate.getDate() + (6 - lastDay.getDay()));
+
+                for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+                    const dayElement = document.createElement('div');
+                    dayElement.className = 'calendar-day';
+                    dayElement.dataset.date = d.toISOString().split('T')[0];
+                    
+                    if (d.getMonth() !== month) {
+                        dayElement.classList.add('other-month');
+                    }
+                    
+                    const today = new Date();
+                    if (d.toDateString() === today.toDateString()) {
+                        dayElement.classList.add('today');
+                    }
+                    
+                    dayElement.innerHTML = `
+                        <div class="day-number">${d.getDate()}</div>
+                        <div class="day-content"></div>
+                    `;
+                    
+                    calendar.appendChild(dayElement);
+                }
             }
-        ];
-        
-        function generateCalendar() {
-            const calendar = document.getElementById('calendar');
-            const headerCells = calendar.querySelectorAll('.calendar-header');
-            
-            // 清除现有的日期单元格
-            const existingDays = calendar.querySelectorAll('.calendar-day');
-            existingDays.forEach(day => day.remove());
-            
-            // 生成8月份的日历
-            for (let day = 1; day <= 31; day++) {
-                const dayCell = document.createElement('div');
-                dayCell.className = 'calendar-day';
-                dayCell.innerHTML = `<div class="day-number">${day}</div>`;
-                
-                const dateStr = `2025-08-${day.toString().padStart(2, '0')}`;
-                
-                // 添加范围标记和内容
-                projectData.forEach((project, index) => {
-                    if (dateStr >= project.startDate && dateStr <= project.endDate) {
-                        // 添加范围标记
-                        const rangeMark = document.createElement('div');
-                        rangeMark.className = 'range-mark';
-                        rangeMark.textContent = project.name;
-                        rangeMark.style.backgroundColor = project.color + '20';
-                        rangeMark.style.borderColor = project.color;
-                        rangeMark.style.color = project.color;
-                        dayCell.appendChild(rangeMark);
+
+            // 添加任务显示
+            ranges.forEach((range, rangeIndex) => {
+                if (currentSpanMode === 'span') {
+                    // 连续模式：生成跨日期连续条形图
+                    const spans = calculateSpanDisplay(range);
+                    
+                    spans.forEach((span, spanIndex) => {
+                        const startDate = new Date(span.startDate);
+                        const endDate = new Date(span.endDate);
+                        const dayCount = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
                         
-                        // 添加跨日期内容（仅在起始日期）
-                        if (currentSpanMode === 'span' && dateStr === project.startDate) {
-                            const spanContent = document.createElement('div');
-                            spanContent.className = 'span-content-mark';
-                            spanContent.textContent = project.content;
-                            spanContent.style.backgroundColor = project.color + '15';
-                            spanContent.style.borderColor = project.color;
-                            spanContent.style.color = project.color;
+                        // 在起始日期创建跨日期标记
+                        const startDayElement = document.querySelector(`[data-date="${span.startDate}"]`);
+                        if (startDayElement) {
+                            const dayContent = startDayElement.querySelector('.day-content');
+                            const spanElement = document.createElement('div');
+                            spanElement.className = 'span-content-mark';
+                            spanElement.textContent = range.content || range.name;
                             
-                            // 计算跨度宽度
-                            const startDate = new Date(project.startDate);
-                            const endDate = new Date(project.endDate);
-                            const daysDiff = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
-                            const cellWidth = 100; // 假设每个单元格宽度
-                            const spanWidth = daysDiff * cellWidth - 10; // 减去间距
+                            // 计算宽度和位置
+                            const cellWidth = startDayElement.offsetWidth || 140;
+                            const spanWidth = cellWidth * dayCount + (dayCount - 1); // 包括间隙
                             
-                            spanContent.style.width = `${spanWidth}px`;
-                            spanContent.style.top = `${30 + index * 20}px`;
-                            
-                            // 设置对齐方式
-                            if (currentAlignment === 'left') {
-                                spanContent.style.left = '0px';
-                            } else if (currentAlignment === 'center') {
-                                spanContent.style.left = '50%';
-                                spanContent.style.transform = 'translateX(-50%)';
-                            } else {
-                                spanContent.style.right = '0px';
+                            spanElement.style.cssText = `
+                                position: absolute;
+                                left: 0;
+                                top: ${30 + rangeIndex * 25}px;
+                                width: ${spanWidth}px;
+                                height: 20px;
+                                background: ${range.bgColor || '#4a90e2'};
+                                color: ${range.color || '#fff'};
+                                font-size: 11px;
+                                line-height: 20px;
+                                text-align: ${currentAlignment};
+                                border-radius: 4px;
+                                padding: 0 8px;
+                                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                                z-index: ${10 + rangeIndex};
+                                overflow: hidden;
+                                white-space: nowrap;
+                                text-overflow: ellipsis;
+                            `;
+
+                            // 跨周边框样式
+                            if (spans.length > 1) {
+                                if (span.isFirstWeek) {
+                                    spanElement.style.borderRight = '2px dashed rgba(255,255,255,0.5)';
+                                } else if (span.isLastWeek) {
+                                    spanElement.style.borderLeft = '2px dashed rgba(255,255,255,0.5)';
+                                } else {
+                                    spanElement.style.borderLeft = '2px dashed rgba(255,255,255,0.5)';
+                                    spanElement.style.borderRight = '2px dashed rgba(255,255,255,0.5)';
+                                    spanElement.style.opacity = '0.9';
+                                }
                             }
                             
-                            dayCell.appendChild(spanContent);
+                            dayContent.appendChild(spanElement);
+                        }
+                    });
+                } else {
+                    // 单日模式：在每个日期单独显示
+                    const startDate = new Date(range.startDate);
+                    const endDate = new Date(range.endDate);
+                    
+                    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+                        const dateStr = d.toISOString().split('T')[0];
+                        const dayElement = document.querySelector(`[data-date="${dateStr}"]`);
+                        
+                        if (dayElement) {
+                            const dayContent = dayElement.querySelector('.day-content');
+                            const contentElement = document.createElement('div');
+                            contentElement.className = 'content-mark';
+                            contentElement.textContent = range.content || range.name;
+                            
+                            contentElement.style.cssText = `
+                                position: absolute;
+                                left: 5px;
+                                right: 5px;
+                                top: ${30 + rangeIndex * 25}px;
+                                height: 20px;
+                                background: ${range.bgColor || '#4a90e2'};
+                                color: ${range.color || '#fff'};
+                                font-size: 11px;
+                                line-height: 20px;
+                                text-align: ${currentAlignment};
+                                border-radius: 4px;
+                                padding: 0 8px;
+                                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                                z-index: ${10 + rangeIndex};
+                                overflow: hidden;
+                                white-space: nowrap;
+                                text-overflow: ellipsis;
+                            `;
+                            
+                            dayContent.appendChild(contentElement);
                         }
                     }
-                });
-                
-                calendar.appendChild(dayCell);
-            }
+                }
+            });
+
+            updateStats();
         }
-        
-        function toggleSpanMode() {
-            currentSpanMode = currentSpanMode === 'span' ? 'single' : 'span';
-            const button = document.querySelector('button[onclick="toggleSpanMode()"]');
-            const statusIndicator = button.querySelector('.status-indicator');
-            const modeText = document.getElementById('spanModeText');
+
+        // 切换显示模式
+        function toggleSpanMode(mode) {
+            currentSpanMode = mode;
             
-            if (currentSpanMode === 'span') {
-                statusIndicator.className = 'status-indicator status-span';
-                modeText.textContent = '跨日期模式';
-            } else {
-                statusIndicator.className = 'status-indicator status-single';
-                modeText.textContent = '单日期模式';
-            }
+            // 更新按钮状态
+            document.querySelectorAll('.controls .btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
             
             generateCalendar();
         }
-        
-        function changeAlignment() {
-            const select = document.getElementById('alignmentSelect');
-            currentAlignment = select.value;
+
+        // 改变对齐方式
+        function changeAlignment(alignment) {
+            currentAlignment = alignment;
+            
+            // 更新按钮状态
+            const alignmentButtons = document.querySelectorAll('.controls .control-group:nth-child(2) .btn');
+            alignmentButtons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
             generateCalendar();
         }
-        
+
+        // 添加长期任务
         function addLongTermTask() {
             const newTask = {
-                code: 'maintenance',
-                name: '维护期',
+                code: `task-${Date.now()}`,
+                name: '新增长期任务',
                 startDate: '2025-08-20',
-                endDate: '2025-08-31',
-                content: '监控系统运行、用户反馈处理、性能优化',
-                color: '#9370db'
+                endDate: '2025-08-30',
+                color: '#fff',
+                bgColor: '#' + Math.floor(Math.random()*16777215).toString(16),
+                content: '动态添加的长期任务'
             };
             
-            projectData.push(newTask);
+            ranges.push(newTask);
             generateCalendar();
-            alert('已添加长期维护任务！');
         }
-        
-        function updateContentStyle() {
-            const spanContents = document.querySelectorAll('.span-content-mark');
-            spanContents.forEach(content => {
-                content.style.backgroundColor = '#e6f3ff';
-                content.style.border = '2px solid #4a90e2';
-                content.style.fontSize = '14px';
-                content.style.padding = '4px 12px';
-                content.style.fontWeight = '600';
+
+        // 更新统计信息
+        function updateStats() {
+            const totalTasks = ranges.length;
+            const spanTasks = ranges.filter(range => {
+                const start = new Date(range.startDate);
+                const end = new Date(range.endDate);
+                return (end - start) / (1000 * 60 * 60 * 24) > 0;
+            }).length;
+            
+            const spans = ranges.map(range => {
+                const start = new Date(range.startDate);
+                const end = new Date(range.endDate);
+                return Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
             });
-            alert('内容样式已更新！');
+            
+            const avgSpan = spans.length > 0 ? Math.round(spans.reduce((a, b) => a + b, 0) / spans.length) : 0;
+            const maxSpan = spans.length > 0 ? Math.max(...spans) : 0;
+
+            document.getElementById('totalTasks').textContent = totalTasks;
+            document.getElementById('spanTasks').textContent = spanTasks;
+            document.getElementById('avgSpan').textContent = avgSpan + '天';
+            document.getElementById('maxSpan').textContent = maxSpan + '天';
         }
-        
-        // 初始化日历
-        generateCalendar();
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            generateCalendar();
+        });
     </script>
 </body>
 </html>

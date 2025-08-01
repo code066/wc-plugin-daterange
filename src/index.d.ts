@@ -146,6 +146,8 @@ export interface CalendarMark {
   contentIndex?: number;
   /** 周索引（仅 span-content 类型） */
   weekIndex?: number;
+  /** 层级索引（用于多行显示避免重叠） */
+  layer?: number;
   /** 周组信息（仅 span-content 类型） */
   weekGroup?: {
     weekIndex: number;
@@ -189,6 +191,7 @@ export interface CalendarMark {
     isMultiWeek: boolean;
     currentWeek: number;
     totalWeeks: number;
+    layer?: number;
   };
 }
 

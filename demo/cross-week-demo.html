@@ -139,7 +139,7 @@
 
         .calendar-day {
             background: white;
-            min-height: 120px;
+            min-height: 140px;
             padding: 10px;
             border-radius: 8px;
             position: relative;
@@ -749,6 +749,36 @@
                     '周一完成收尾'
                 ],
                 data: { phase: 'weekend-work', special: true }
+            },
+            {
+                code: 'overlap-task-1',
+                name: '重叠任务1',
+                startDate: '2025-08-03',
+                endDate: '2025-08-10',
+                color: '#fff',
+                bgColor: '#ff9500',
+                content: '重叠任务1 - 测试多行显示',
+                data: { phase: 'testing', layer: 1 }
+            },
+            {
+                code: 'overlap-task-2',
+                name: '重叠任务2',
+                startDate: '2025-08-04',
+                endDate: '2025-08-11',
+                color: '#fff',
+                bgColor: '#e91e63',
+                content: '重叠任务2 - 测试多行显示',
+                data: { phase: 'testing', layer: 2 }
+            },
+            {
+                code: 'overlap-task-3',
+                name: '重叠任务3',
+                startDate: '2025-08-05',
+                endDate: '2025-08-12',
+                color: '#fff',
+                bgColor: '#9c27b0',
+                content: '重叠任务3 - 测试多行显示',
+                data: { phase: 'testing', layer: 3 }
             }
         ];
 
@@ -819,7 +849,10 @@
                     
                     // 应用样式
                     Object.assign(markElement.style, mark.style);
-                    markElement.style.top = `${30 + index * 20}px`;
+                    
+                    // 使用layer信息来定位，避免跨周内容重叠
+                    const layer = mark.spanInfo?.layer !== undefined ? mark.spanInfo.layer : index;
+                    markElement.style.top = `${30 + layer * 20}px`;
                     markElement.style.left = '2px';
                     markElement.style.right = '2px';
                     

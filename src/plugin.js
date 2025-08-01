@@ -171,16 +171,71 @@ class DateRangePlugin {
   }
 
   /**
+   * 计算所有跨周内容的层级分配，避免重叠
+   */
+  calculateContentLayers() {
+    const layers = new Map(); // rangeCode -> layer
+    const layerOccupancy = []; // 每层的占用时间段
+    
+    // 获取所有需要显示内容的范围，按开始日期排序
+    const contentRanges = this.ranges
+      .filter(range => this.shouldShowContent(range) && this.options.contentSpanMode === 'span')
+      .sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
+    
+    contentRanges.forEach(range => {
+      const startDate = new Date(range.startDate);
+      const endDate = new Date(range.endDate);
+      
+      // 查找可用的层级
+      let assignedLayer = -1;
+      for (let layer = 0; layer < layerOccupancy.length; layer++) {
+        const layerRanges = layerOccupancy[layer];
+        
+        // 检查是否与该层的现有范围冲突
+        const hasConflict = layerRanges.some(existingRange => {
+          return !(endDate < existingRange.start || startDate > existingRange.end);
+        });
+        
+        if (!hasConflict) {
+          assignedLayer = layer;
+          break;
+        }
+      }
+      
+      // 如果没有找到可用层级，创建新层级
+      if (assignedLayer === -1) {
+        assignedLayer = layerOccupancy.length;
+        layerOccupancy.push([]);
+      }
+      
+      // 将范围添加到分配的层级
+      layerOccupancy[assignedLayer].push({
+        start: startDate,
+        end: endDate,
+        rangeCode: range.code
+      });
+      
+      layers.set(range.code, assignedLayer);
+    });
+    
+    return layers;
+  }
+
+  /**
    * 生成跨日期内容标记
    */
   generateSpanContentMarks(range) {
     const contentMarks = [];
     const spanDimensions = this.calculateSpanDimensions(range);
     
+    // 获取内容层级信息
+    const contentLayers = this.calculateContentLayers();
+    const layer = contentLayers.get(range.code) || 0;
+    
     if (range.content) {
       // 单个内容项 - 为每个周组生成标记
       spanDimensions.weekGroups.forEach((weekGroup, weekIndex) => {
-        const contentMark = this.createSpanContentMark(range, weekGroup, range.content, 0, spanDimensions, weekIndex);
+        const contentMark = this.createSpanContentMark(range, weekGroup, range.content, 0, spanDimensions, weekIndex, layer);
         contentMarks.push(contentMark);
       });
     } else if (range.contents && Array.isArray(range.contents)) {
@@ -188,7 +243,7 @@ class DateRangePlugin {
       range.contents.forEach((content, contentIndex) => {
         if (contentIndex < this.options.maxContentLines) {
           spanDimensions.weekGroups.forEach((weekGroup, weekIndex) => {
-            const contentMark = this.createSpanContentMark(range, weekGroup, content, contentIndex, spanDimensions, weekIndex);
+            const contentMark = this.createSpanContentMark(range, weekGroup, content, contentIndex, spanDimensions, weekIndex, layer + contentIndex);
             contentMarks.push(contentMark);
           });
         }
@@ -262,7 +317,7 @@ class DateRangePlugin {
   /**
    * 创建跨日期内容标记
    */
-  createSpanContentMark(range, weekGroup, content, contentIndex, spanDimensions, weekIndex) {
+  createSpanContentMark(range, weekGroup, content, contentIndex, spanDimensions, weekIndex, layer = 0) {
     const contentKey = `${range.code}-${weekGroup.weekStartDate}-span-content-${contentIndex}-week-${weekIndex}`;
     
     // 处理内容文本
@@ -288,11 +343,14 @@ class DateRangePlugin {
     const isMultiWeek = spanDimensions.weekGroups.length > 1;
     if (isMultiWeek) {
       if (weekGroup.isFirstWeek) {
-        text = text; // 第一周显示完整文本
+        // 第一周显示完整文本（截断过长部分）
+        text = text.slice(0, 20) + (text.length > 20 ? '...' : '');
       } else if (weekGroup.isLastWeek) {
-        text = `...${text.slice(-15)}`; // 最后一周显示结尾
+        // 最后一周显示尾部内容
+        text = text.length > 15 ? '...' + text.slice(-15) : text;
       } else {
-        text = '...'; // 中间周显示省略号
+        // 中间周只显示省略号
+        text = '...';
       }
     }
     
@@ -337,6 +395,7 @@ class DateRangePlugin {
       markType: 'span-content',
       contentIndex: contentIndex,
       weekIndex: weekIndex,
+      layer: layer, // 添加层级信息
       weekGroup: weekGroup,
       spanDimensions: spanDimensions,
       spanInfo: {
@@ -345,7 +404,8 @@ class DateRangePlugin {
         alignment: spanDimensions.alignment,
         isMultiWeek: spanDimensions.weekGroups.length > 1,
         currentWeek: weekIndex + 1,
-        totalWeeks: spanDimensions.weekGroups.length
+        totalWeeks: spanDimensions.weekGroups.length,
+        layer: layer // 在spanInfo中也包含层级信息
       }
     };
   }
@@ -601,7 +661,15 @@ class DateRangePlugin {
   }
 }
 
-module.exports = {
-  DateRangePlugin,
-  DATE_RANGE_PLUGIN_KEY
-};
+// 浏览器环境下的全局导出
+if (typeof module !== 'undefined' && module.exports) {
+  // Node.js 环境
+  module.exports = {
+    DateRangePlugin,
+    DATE_RANGE_PLUGIN_KEY
+  };
+} else {
+  // 浏览器环境
+  window.DateRangePlugin = DateRangePlugin;
+  window.DATE_RANGE_PLUGIN_KEY = DATE_RANGE_PLUGIN_KEY;
+}
