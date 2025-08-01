@@ -6,24 +6,47 @@
 const DATE_RANGE_PLUGIN_KEY = 'dateRange';
 
 class DateRangePlugin {
+  /**
+   * 默认配置
+   */
+  static defaultOptions = {
+    ranges: [],
+    markAs: 'schedule',
+    defaultColor: '#667eea',
+    defaultBgColor: '#f0f2ff',
+    clickable: true,
+    onRangeClick: null,
+    
+    // 内容显示相关配置
+    showContent: false,
+    contentMarkAs: 'schedule',
+    contentDefaultColor: '#666666',
+    contentDefaultBgColor: '#ffffff',
+    contentDefaultFontSize: '12px',
+    contentDefaultPadding: '4px',
+    contentDefaultBorderRadius: '4px',
+    contentDefaultLineHeight: '1.4',
+    maxContentLines: 3,
+    
+    // 跨日期内容显示配置
+    contentSpanMode: 'single', // 'single' | 'span'
+    contentAlignment: 'left',   // 'left' | 'center' | 'right'
+    spanContentStyle: {
+      backgroundColor: 'rgba(255, 255, 255, 0.95)',
+      border: '1px solid #e0e0e0',
+      borderRadius: '4px',
+      padding: '4px 8px',
+      fontSize: '12px',
+      color: '#333',
+      boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+      zIndex: 10
+    }
+  };
+
   constructor(calendar, options = {}) {
     this.calendar = calendar;
     this.options = {
-      ranges: [],
-      markAs: 'festival',
-      defaultColor: '#333333',
-      defaultBgColor: '#f5f5f5',
-      onRangeClick: null,
-      // 新增内容显示配置
-      showContent: true,
-      contentMarkAs: 'schedule',
-      contentDefaultColor: '#666666',
-      contentDefaultBgColor: '#ffffff',
-      contentDefaultFontSize: '12px',
-      contentDefaultPadding: '4px',
-      contentDefaultBorderRadius: '4px',
-      contentDefaultLineHeight: '1.4',
-      maxContentLines: 3,
+      ...DateRangePlugin.defaultOptions,
       ...options
     };
     
@@ -118,13 +141,22 @@ class DateRangePlugin {
         
         marks.push(rangeMark);
         this.markMap.set(markKey, range);
-        
-        // 生成内容标记
-        if (this.options.showContent && this.shouldShowContent(range, date)) {
-          const contentMarks = this.generateContentMarks(range, date);
-          marks.push(...contentMarks);
-        }
       });
+      
+      // 生成内容标记
+      if (this.options.showContent && this.shouldShowContent(range)) {
+        if (this.options.contentSpanMode === 'span') {
+          // 跨日期模式：只在第一个日期生成跨日内容标记
+          const spanContentMarks = this.generateSpanContentMarks(range);
+          marks.push(...spanContentMarks);
+        } else {
+          // 单日模式：在每个日期生成内容标记
+          dates.forEach(date => {
+            const contentMarks = this.generateContentMarks(range, date);
+            marks.push(...contentMarks);
+          });
+        }
+      }
     });
     
     return marks;
@@ -133,9 +165,189 @@ class DateRangePlugin {
   /**
    * 判断是否应该显示内容
    */
-  shouldShowContent(range, date) {
+  shouldShowContent(range) {
     // 如果有 content 或 contents 字段，则显示内容
     return range.content || range.contents;
+  }
+
+  /**
+   * 生成跨日期内容标记
+   */
+  generateSpanContentMarks(range) {
+    const contentMarks = [];
+    const spanDimensions = this.calculateSpanDimensions(range);
+    
+    if (range.content) {
+      // 单个内容项 - 为每个周组生成标记
+      spanDimensions.weekGroups.forEach((weekGroup, weekIndex) => {
+        const contentMark = this.createSpanContentMark(range, weekGroup, range.content, 0, spanDimensions, weekIndex);
+        contentMarks.push(contentMark);
+      });
+    } else if (range.contents && Array.isArray(range.contents)) {
+      // 多个内容项 - 为每个内容项的每个周组生成标记
+      range.contents.forEach((content, contentIndex) => {
+        if (contentIndex < this.options.maxContentLines) {
+          spanDimensions.weekGroups.forEach((weekGroup, weekIndex) => {
+            const contentMark = this.createSpanContentMark(range, weekGroup, content, contentIndex, spanDimensions, weekIndex);
+            contentMarks.push(contentMark);
+          });
+        }
+      });
+    }
+    
+    return contentMarks;
+  }
+
+  /**
+   * 计算跨日期内容的尺寸和位置（按周分组）
+   */
+  calculateSpanDimensions(range) {
+    const dates = this.getDatesBetween(range.startDate, range.endDate);
+    const totalDays = dates.length;
+    
+    // 按周分组日期
+    const weekGroups = [];
+    const datesByWeek = new Map();
+    
+    // 将日期按周分组
+    dates.forEach(dateStr => {
+      const date = new Date(dateStr);
+      const year = date.getFullYear();
+      const month = date.getMonth();
+      
+      // 计算该日期所在周的周一日期作为周标识
+      const dayOfWeek = date.getDay(); // 0=Sunday, 1=Monday, ...
+      const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // 计算到周一的偏移
+      const monday = new Date(date);
+      monday.setDate(date.getDate() + mondayOffset);
+      
+      const weekKey = monday.toISOString().split('T')[0];
+      
+      if (!datesByWeek.has(weekKey)) {
+        datesByWeek.set(weekKey, []);
+      }
+      datesByWeek.get(weekKey).push(dateStr);
+    });
+    
+    // 转换为周组信息
+    let weekIndex = 0;
+    for (const [weekKey, weekDates] of datesByWeek) {
+      weekDates.sort(); // 确保日期排序
+      
+      const firstDate = new Date(weekDates[0]);
+      const lastDate = new Date(weekDates[weekDates.length - 1]);
+      const startDayOfWeek = firstDate.getDay();
+      
+      weekGroups.push({
+        weekIndex: weekIndex,
+        weekStartDate: weekDates[0],
+        weekEndDate: weekDates[weekDates.length - 1],
+        days: weekDates.length,
+        startDayOfWeek: startDayOfWeek,
+        isFirstWeek: weekIndex === 0,
+        isLastWeek: weekIndex === datesByWeek.size - 1,
+        dates: weekDates
+      });
+      
+      weekIndex++;
+    }
+    
+    return {
+      totalDays,
+      weekGroups,
+      alignment: this.options.contentAlignment
+    };
+  }
+
+  /**
+   * 创建跨日期内容标记
+   */
+  createSpanContentMark(range, weekGroup, content, contentIndex, spanDimensions, weekIndex) {
+    const contentKey = `${range.code}-${weekGroup.weekStartDate}-span-content-${contentIndex}-week-${weekIndex}`;
+    
+    // 处理内容文本
+    let text = '';
+    let customStyle = {};
+    
+    if (typeof content === 'string') {
+      text = content;
+    } else if (typeof content === 'object') {
+      text = content.text || '';
+      customStyle = content.style || {};
+      
+      // 支持直接在 content 对象上设置颜色
+      if (content.color) {
+        customStyle.color = content.color;
+      }
+      if (content.bgColor || content.backgroundColor) {
+        customStyle.backgroundColor = content.bgColor || content.backgroundColor;
+      }
+    }
+    
+    // 为跨周内容添加视觉标识
+    const isMultiWeek = spanDimensions.weekGroups.length > 1;
+    if (isMultiWeek) {
+      if (weekGroup.isFirstWeek) {
+        text = text; // 第一周显示完整文本
+      } else if (weekGroup.isLastWeek) {
+        text = `...${text.slice(-15)}`; // 最后一周显示结尾
+      } else {
+        text = '...'; // 中间周显示省略号
+      }
+    }
+    
+    // 合并样式
+    const style = {
+      ...this.options.spanContentStyle,
+      ...customStyle,
+      position: 'absolute',
+      whiteSpace: 'nowrap',
+      overflow: 'hidden',
+      textOverflow: 'ellipsis'
+    };
+    
+    // 为不同周添加视觉区分样式
+    if (isMultiWeek) {
+      if (weekGroup.isFirstWeek) {
+        // 第一周：右边虚线边框
+        style.borderRight = '1px dashed #4a90e2';
+      } else if (weekGroup.isLastWeek) {
+        // 最后一周：左边虚线边框
+        style.borderLeft = '1px dashed #4a90e2';
+      } else {
+        // 中间周：两边虚线边框，降低透明度
+        style.borderLeft = '1px dashed #4a90e2';
+        style.borderRight = '1px dashed #4a90e2';
+        style.opacity = 0.8;
+      }
+      
+      // 为所有跨周内容添加特殊的边框样式以增强视觉连续性
+      style.boxShadow = '0 1px 3px rgba(74, 144, 226, 0.2)';
+    }
+    
+    return {
+      date: weekGroup.weekStartDate,
+      type: this.options.contentMarkAs,
+      text: text,
+      style: style,
+      key: contentKey,
+      clickable: range.clickable !== false,
+      rangeCode: range.code,
+      rangeData: range.data,
+      markType: 'span-content',
+      contentIndex: contentIndex,
+      weekIndex: weekIndex,
+      weekGroup: weekGroup,
+      spanDimensions: spanDimensions,
+      spanInfo: {
+        totalDays: spanDimensions.totalDays,
+        weekGroups: spanDimensions.weekGroups,
+        alignment: spanDimensions.alignment,
+        isMultiWeek: spanDimensions.weekGroups.length > 1,
+        currentWeek: weekIndex + 1,
+        totalWeeks: spanDimensions.weekGroups.length
+      }
+    };
   }
 
   /**

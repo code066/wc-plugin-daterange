@@ -75,6 +75,22 @@ export interface PluginOptions {
   contentDefaultLineHeight?: string;
   /** 最大内容行数 */
   maxContentLines?: number;
+  /** 内容显示模式 */
+  contentSpanMode?: 'single' | 'span';
+  /** 内容对齐方式 */
+  contentAlignment?: 'left' | 'center' | 'right';
+  /** 跨日期内容样式 */
+  spanContentStyle?: {
+    backgroundColor?: string;
+    border?: string;
+    padding?: string;
+    fontSize?: string;
+    color?: string;
+    boxShadow?: string;
+    zIndex?: number;
+    borderRadius?: string;
+    lineHeight?: string;
+  };
 }
 
 export interface RangeClickEvent {
@@ -104,6 +120,16 @@ export interface CalendarMark {
     padding?: string;
     borderRadius?: string;
     lineHeight?: string;
+    position?: string;
+    whiteSpace?: string;
+    overflow?: string;
+    textOverflow?: string;
+    border?: string;
+    borderLeft?: string;
+    borderRight?: string;
+    boxShadow?: string;
+    zIndex?: number;
+    opacity?: string;
     [key: string]: any;
   };
   /** 标记键 */
@@ -115,9 +141,55 @@ export interface CalendarMark {
   /** 范围数据 */
   rangeData?: any;
   /** 标记类型：range 或 content */
-  markType?: 'range' | 'content';
+  markType?: 'range' | 'content' | 'span-content';
   /** 内容索引（仅 content 类型） */
   contentIndex?: number;
+  /** 周索引（仅 span-content 类型） */
+  weekIndex?: number;
+  /** 周组信息（仅 span-content 类型） */
+  weekGroup?: {
+    weekIndex: number;
+    weekStartDate: string;
+    weekEndDate: string;
+    days: number;
+    startDayOfWeek: number;
+    isFirstWeek: boolean;
+    isLastWeek: boolean;
+    dates: string[];
+  };
+  /** 跨度维度信息 */
+  spanDimensions?: {
+    totalDays: number;
+    weekGroups: Array<{
+      weekIndex: number;
+      weekStartDate: string;
+      weekEndDate: string;
+      days: number;
+      startDayOfWeek: number;
+      isFirstWeek: boolean;
+      isLastWeek: boolean;
+      dates: string[];
+    }>;
+    alignment: 'left' | 'center' | 'right';
+  };
+  /** 跨度信息 */
+  spanInfo?: {
+    totalDays: number;
+    weekGroups: Array<{
+      weekIndex: number;
+      weekStartDate: string;
+      weekEndDate: string;
+      days: number;
+      startDayOfWeek: number;
+      isFirstWeek: boolean;
+      isLastWeek: boolean;
+      dates: string[];
+    }>;
+    alignment: 'left' | 'center' | 'right';
+    isMultiWeek: boolean;
+    currentWeek: number;
+    totalWeeks: number;
+  };
 }
 
 export interface PluginInfo {

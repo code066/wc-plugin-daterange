@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>跨周内容显示演示 - wc-plugin-daterange</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .controls {
+            padding: 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .control-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .control-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .control-group label {
+            font-weight: 600;
+            color: #495057;
+            min-width: 120px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: 2px solid #4a90e2;
+            background: white;
+            color: #4a90e2;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background: #4a90e2;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+        }
+
+        .btn.active {
+            background: #4a90e2;
+            color: white;
+        }
+
+        .btn.secondary {
+            border-color: #6c757d;
+            color: #6c757d;
+        }
+
+        .btn.secondary:hover {
+            background: #6c757d;
+            color: white;
+        }
+
+        .calendar-container {
+            padding: 30px;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
+            background: #e9ecef;
+            border-radius: 12px;
+            padding: 20px;
+            position: relative;
+        }
+
+        .calendar-header {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
+            margin-bottom: 15px;
+        }
+
+        .day-header {
+            background: #495057;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-weight: 600;
+            border-radius: 8px;
+        }
+
+        .calendar-day {
+            background: white;
+            min-height: 120px;
+            padding: 10px;
+            border-radius: 8px;
+            position: relative;
+            border: 1px solid #dee2e6;
+            transition: all 0.3s ease;
+        }
+
+        .calendar-day:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .calendar-day.other-month {
+            background: #f8f9fa;
+            color: #6c757d;
+        }
+
+        .calendar-day.today {
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            font-weight: bold;
+            color: #333;
+        }
+
+        .day-number {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #495057;
+        }
+
+        .day-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .content-mark {
+            position: absolute;
+            background: #e6f3ff;
+            border: 1px solid #4a90e2;
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: 11px;
+            color: #2c5aa0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            z-index: 10;
+            transition: all 0.3s ease;
+        }
+
+        .content-mark:hover {
+            transform: scale(1.05);
+            z-index: 20;
+            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+        }
+
+        .content-mark.multi-week {
+            border-left: 3px solid #4a90e2;
+            border-right: 3px solid #4a90e2;
+        }
+
+        .content-mark.first-week {
+            border-right: 1px dashed #4a90e2;
+        }
+
+        .content-mark.last-week {
+            border-left: 1px dashed #4a90e2;
+        }
+
+        .content-mark.middle-week {
+            opacity: 0.8;
+            border-left: 1px dashed #4a90e2;
+            border-right: 1px dashed #4a90e2;
+        }
+
+        .stats {
+            padding: 30px;
+            background: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .stat-card h3 {
+            color: #495057;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #4a90e2;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+
+        .task-list {
+            margin-top: 15px;
+        }
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .task-item:last-child {
+            border-bottom: none;
+        }
+
+        .task-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .task-name {
+            flex: 1;
+            font-size: 0.9em;
+            color: #495057;
+        }
+
+        .task-weeks {
+            font-size: 0.8em;
+            color: #6c757d;
+            background: #e9ecef;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .legend {
+            margin-top: 20px;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .legend h4 {
+            margin-bottom: 15px;
+            color: #495057;
+        }
+
+        .legend-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 12px;
+            border-radius: 4px;
+        }
+
+        .legend-text {
+            font-size: 0.9em;
+            color: #495057;
+        }
+
+        @media (max-width: 768px) {
+            .calendar-grid {
+                grid-template-columns: repeat(7, 1fr);
+                gap: 1px;
+                padding: 10px;
+            }
+
+            .calendar-day {
+                min-height: 80px;
+                padding: 5px;
+            }
+
+            .content-mark {
+                font-size: 10px;
+                padding: 2px 4px;
+            }
+
+            .controls {
+                padding: 20px;
+            }
+
+            .control-group {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>跨周内容显示演示</h1>
+            <p>演示内容如何在日历中跨越多个周进行显示，类似甘特图的效果</p>
+        </div>
+
+        <div class="controls">
+            <div class="control-group">
+                <label>显示模式:</label>
+                <div class="btn-group">
+                    <button class="btn active" onclick="toggleSpanMode('span')">跨周模式</button>
+                    <button class="btn" onclick="toggleSpanMode('single')">单日模式</button>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label>内容对齐:</label>
+                <div class="btn-group">
+                    <button class="btn active" onclick="changeAlignment('left')">左对齐</button>
+                    <button class="btn" onclick="changeAlignment('center')">居中</button>
+                    <button class="btn" onclick="changeAlignment('right')">右对齐</button>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label>操作:</label>
+                <div class="btn-group">
+                    <button class="btn secondary" onclick="addRandomTask()">添加随机任务</button>
+                    <button class="btn secondary" onclick="clearAllTasks()">清空所有任务</button>
+                    <button class="btn secondary" onclick="resetDemo()">重置演示</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="calendar-container">
+            <div class="calendar-header">
+                <div class="day-header">周日</div>
+                <div class="day-header">周一</div>
+                <div class="day-header">周二</div>
+                <div class="day-header">周三</div>
+                <div class="day-header">周四</div>
+                <div class="day-header">周五</div>
+                <div class="day-header">周六</div>
+            </div>
+            <div class="calendar-grid" id="calendar"></div>
+        </div>
+
+        <div class="stats">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>任务统计</h3>
+                    <div class="stat-value" id="totalTasks">0</div>
+                    <div class="stat-label">总任务数</div>
+                    <div class="task-list" id="taskList"></div>
+                </div>
+
+                <div class="stat-card">
+                    <h3>跨周分析</h3>
+                    <div class="stat-value" id="crossWeekTasks">0</div>
+                    <div class="stat-label">跨周任务数</div>
+                    <div style="margin-top: 10px;">
+                        <div>平均跨越: <span id="avgWeeks">0</span> 周</div>
+                        <div>最长任务: <span id="maxWeeks">0</span> 周</div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <h3>显示效率</h3>
+                    <div class="stat-value" id="efficiency">0%</div>
+                    <div class="stat-label">标记减少比例</div>
+                    <div style="margin-top: 10px;">
+                        <div>跨周模式: <span id="spanMarks">0</span> 个标记</div>
+                        <div>单日模式: <span id="singleMarks">0</span> 个标记</div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <h3>当前设置</h3>
+                    <div style="margin-top: 10px;">
+                        <div>显示模式: <span id="currentMode">跨周模式</span></div>
+                        <div>内容对齐: <span id="currentAlignment">左对齐</span></div>
+                        <div>最大行数: <span id="maxLines">3</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="legend">
+                <h4>图例说明</h4>
+                <div class="legend-items">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #4a90e2; border-left: 3px solid #2c5aa0;"></div>
+                        <span class="legend-text">跨周任务 - 首周</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #4a90e2; opacity: 0.8; border: 1px dashed #2c5aa0;"></div>
+                        <span class="legend-text">跨周任务 - 中间周</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #4a90e2; border-right: 3px solid #2c5aa0;"></div>
+                        <span class="legend-text">跨周任务 - 末周</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #32cd32;"></div>
+                        <span class="legend-text">单周任务</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // 模拟插件功能
+        class DateRangePlugin {
+            constructor(options) {
+                this.options = {
+                    markAs: 'range',
+                    defaultColor: '#333',
+                    defaultBgColor: '#e6f3ff',
+                    showContent: true,
+                    contentMarkAs: 'content',
+                    contentSpanMode: 'span',
+                    contentAlignment: 'left',
+                    maxContentLines: 3,
+                    spanContentStyle: {
+                        backgroundColor: '#f0f8ff',
+                        border: '1px solid #4a90e2',
+                        padding: '2px 8px',
+                        fontSize: '12px',
+                        color: '#2c5aa0',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                        zIndex: 10,
+                        borderRadius: '4px',
+                        lineHeight: '1.2'
+                    },
+                    ...options
+                };
+                this.ranges = [];
+            }
+
+            addRange(range) {
+                this.ranges.push(range);
+            }
+
+            addRanges(ranges) {
+                this.ranges.push(...ranges);
+            }
+
+            updateOptions(newOptions) {
+                this.options = { ...this.options, ...newOptions };
+            }
+
+            clearRanges() {
+                this.ranges = [];
+            }
+
+            generateMarks() {
+                const marks = [];
+                
+                this.ranges.forEach(range => {
+                    const startDate = new Date(range.startDate);
+                    const endDate = new Date(range.endDate);
+                    
+                    // 生成范围标记
+                    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+                        marks.push({
+                            date: d.toISOString().split('T')[0],
+                            markType: 'range',
+                            rangeCode: range.code,
+                            style: {
+                                backgroundColor: range.bgColor,
+                                color: range.color
+                            }
+                        });
+                    }
+                    
+                    // 生成内容标记
+                    if (this.options.showContent) {
+                        if (this.options.contentSpanMode === 'span') {
+                            marks.push(...this.generateSpanContentMarks(range));
+                        } else {
+                            marks.push(...this.generateContentMarks(range));
+                        }
+                    }
+                });
+                
+                return marks;
+            }
+
+            generateSpanContentMarks(range) {
+                const marks = [];
+                const spanDimensions = this.calculateSpanDimensions(range);
+                
+                spanDimensions.weekGroups.forEach((weekGroup, weekIndex) => {
+                    marks.push(this.createSpanContentMark(range, weekGroup, weekIndex, spanDimensions));
+                });
+                
+                return marks;
+            }
+
+            generateContentMarks(range) {
+                const marks = [];
+                const startDate = new Date(range.startDate);
+                const endDate = new Date(range.endDate);
+                
+                for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+                    const content = this.getContentForDate(range, d.toISOString().split('T')[0]);
+                    if (content) {
+                        marks.push({
+                            date: d.toISOString().split('T')[0],
+                            markType: 'content',
+                            rangeCode: range.code,
+                            text: content.text || content,
+                            style: {
+                                ...this.options.spanContentStyle,
+                                ...(content.style || {})
+                            }
+                        });
+                    }
+                }
+                
+                return marks;
+            }
+
+            calculateSpanDimensions(range) {
+                const startDate = new Date(range.startDate);
+                const endDate = new Date(range.endDate);
+                const weekGroups = [];
+                
+                let currentDate = new Date(startDate);
+                
+                while (currentDate <= endDate) {
+                    const weekStart = new Date(currentDate);
+                    weekStart.setDate(currentDate.getDate() - currentDate.getDay());
+                    
+                    const weekEnd = new Date(weekStart);
+                    weekEnd.setDate(weekStart.getDate() + 6);
+                    
+                    const groupStart = new Date(Math.max(currentDate.getTime(), startDate.getTime()));
+                    const groupEnd = new Date(Math.min(weekEnd.getTime(), endDate.getTime()));
+                    
+                    const dates = [];
+                    for (let d = new Date(groupStart); d <= groupEnd; d.setDate(d.getDate() + 1)) {
+                        dates.push(d.toISOString().split('T')[0]);
+                    }
+                    
+                    weekGroups.push({
+                        weekStart: weekStart.toISOString().split('T')[0],
+                        dates: dates,
+                        days: dates.length,
+                        isFirstWeek: weekGroups.length === 0,
+                        isLastWeek: groupEnd.getTime() === endDate.getTime()
+                    });
+                    
+                    currentDate = new Date(weekEnd);
+                    currentDate.setDate(currentDate.getDate() + 1);
+                }
+                
+                // 更新 isLastWeek
+                if (weekGroups.length > 0) {
+                    weekGroups[weekGroups.length - 1].isLastWeek = true;
+                }
+                
+                return {
+                    weekGroups: weekGroups,
+                    totalWeeks: weekGroups.length
+                };
+            }
+
+            createSpanContentMark(range, weekGroup, weekIndex, spanDimensions) {
+                const content = this.getContentForDate(range, weekGroup.dates[0]);
+                const isMultiWeek = spanDimensions.totalWeeks > 1;
+                
+                let displayText = content?.text || content || range.name;
+                
+                // 多周显示逻辑
+                if (isMultiWeek) {
+                    if (weekGroup.isFirstWeek) {
+                        displayText = displayText;
+                    } else if (weekGroup.isLastWeek) {
+                        displayText = `...${displayText.slice(-10)}`;
+                    } else {
+                        displayText = '...';
+                    }
+                }
+                
+                const style = {
+                    ...this.options.spanContentStyle,
+                    ...(content?.style || {}),
+                    position: 'absolute',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis'
+                };
+                
+                // 多周边框样式
+                if (isMultiWeek) {
+                    if (weekGroup.isFirstWeek) {
+                        style.borderRight = '1px dashed #4a90e2';
+                    } else if (weekGroup.isLastWeek) {
+                        style.borderLeft = '1px dashed #4a90e2';
+                    } else {
+                        style.borderLeft = '1px dashed #4a90e2';
+                        style.borderRight = '1px dashed #4a90e2';
+                        style.opacity = 0.8;
+                    }
+                }
+                
+                return {
+                    date: weekGroup.dates[0],
+                    markType: 'span-content',
+                    rangeCode: range.code,
+                    text: displayText,
+                    style: style,
+                    weekIndex: weekIndex,
+                    weekGroup: weekGroup,
+                    spanDimensions: spanDimensions,
+                    spanInfo: {
+                        isMultiWeek: isMultiWeek,
+                        currentWeek: weekIndex + 1,
+                        totalWeeks: spanDimensions.totalWeeks
+                    }
+                };
+            }
+
+            getContentForDate(range, date) {
+                if (range.content) {
+                    return range.content;
+                }
+                
+                if (range.contents && Array.isArray(range.contents)) {
+                    const startDate = new Date(range.startDate);
+                    const currentDate = new Date(date);
+                    const dayIndex = Math.floor((currentDate - startDate) / (1000 * 60 * 60 * 24));
+                    return range.contents[dayIndex % range.contents.length];
+                }
+                
+                return range.name;
+            }
+        }
+
+        // 示例数据
+        const demoRanges = [
+            {
+                code: 'long-project',
+                name: '长期项目开发',
+                startDate: '2025-08-01',
+                endDate: '2025-08-15',
+                color: '#fff',
+                bgColor: '#4a90e2',
+                content: '长期项目开发 - 跨越多周的重要任务',
+                data: { phase: 'development', priority: 'high' }
+            },
+            {
+                code: 'cross-week-task',
+                name: '跨周设计任务',
+                startDate: '2025-08-06',
+                endDate: '2025-08-12',
+                color: '#fff',
+                bgColor: '#7b68ee',
+                contents: [
+                    '需求分析阶段',
+                    '设计开发阶段',
+                    '测试验证阶段'
+                ],
+                data: { phase: 'multi-stage', assignee: 'team-alpha' }
+            },
+            {
+                code: 'month-task',
+                name: '月度持续任务',
+                startDate: '2025-08-05',
+                endDate: '2025-08-25',
+                color: '#fff',
+                bgColor: '#32cd32',
+                content: '月度持续性任务 - 整月跨越',
+                data: { phase: 'continuous', duration: 'monthly' }
+            },
+            {
+                code: 'weekend-span',
+                name: '周末跨越任务',
+                startDate: '2025-08-08',
+                endDate: '2025-08-11',
+                color: '#fff',
+                bgColor: '#ff6347',
+                contents: [
+                    '周五准备工作',
+                    '周末持续进行',
+                    '周一完成收尾'
+                ],
+                data: { phase: 'weekend-work', special: true }
+            }
+        ];
+
+        // 初始化插件
+        let plugin = new DateRangePlugin({
+            contentSpanMode: 'span',
+            contentAlignment: 'left',
+            maxContentLines: 3
+        });
+
+        plugin.addRanges([...demoRanges]);
+
+        // 生成日历
+        function generateCalendar() {
+            const calendar = document.getElementById('calendar');
+            calendar.innerHTML = '';
+            
+            // 生成2025年8月的日历
+            const year = 2025;
+            const month = 7; // 8月 (0-based)
+            
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const startDate = new Date(firstDay);
+            startDate.setDate(startDate.getDate() - firstDay.getDay());
+            
+            const endDate = new Date(lastDay);
+            endDate.setDate(endDate.getDate() + (6 - lastDay.getDay()));
+            
+            const marks = plugin.generateMarks();
+            const marksByDate = {};
+            marks.forEach(mark => {
+                if (!marksByDate[mark.date]) {
+                    marksByDate[mark.date] = [];
+                }
+                marksByDate[mark.date].push(mark);
+            });
+            
+            for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+                const dateStr = d.toISOString().split('T')[0];
+                const dayElement = document.createElement('div');
+                dayElement.className = 'calendar-day';
+                
+                if (d.getMonth() !== month) {
+                    dayElement.classList.add('other-month');
+                }
+                
+                const today = new Date();
+                if (d.toDateString() === today.toDateString()) {
+                    dayElement.classList.add('today');
+                }
+                
+                dayElement.innerHTML = `
+                    <div class="day-number">${d.getDate()}</div>
+                    <div class="day-content"></div>
+                `;
+                
+                // 添加标记
+                const dayMarks = marksByDate[dateStr] || [];
+                const contentMarks = dayMarks.filter(mark => 
+                    mark.markType === 'content' || mark.markType === 'span-content'
+                );
+                
+                contentMarks.forEach((mark, index) => {
+                    const markElement = document.createElement('div');
+                    markElement.className = 'content-mark';
+                    markElement.textContent = mark.text;
+                    
+                    // 应用样式
+                    Object.assign(markElement.style, mark.style);
+                    markElement.style.top = `${30 + index * 20}px`;
+                    markElement.style.left = '2px';
+                    markElement.style.right = '2px';
+                    
+                    // 添加跨周样式类
+                    if (mark.spanInfo?.isMultiWeek) {
+                        markElement.classList.add('multi-week');
+                        if (mark.weekGroup?.isFirstWeek) {
+                            markElement.classList.add('first-week');
+                        } else if (mark.weekGroup?.isLastWeek) {
+                            markElement.classList.add('last-week');
+                        } else {
+                            markElement.classList.add('middle-week');
+                        }
+                    }
+                    
+                    // 添加悬停信息
+                    markElement.title = `${mark.rangeCode}: ${mark.text}${
+                        mark.spanInfo?.isMultiWeek ? 
+                        ` (第${mark.spanInfo.currentWeek}周/共${mark.spanInfo.totalWeeks}周)` : 
+                        ''
+                    }`;
+                    
+                    dayElement.appendChild(markElement);
+                });
+                
+                calendar.appendChild(dayElement);
+            }
+            
+            updateStats();
+        }
+
+        // 更新统计信息
+        function updateStats() {
+            const marks = plugin.generateMarks();
+            const spanMarks = marks.filter(mark => mark.markType === 'span-content');
+            
+            // 临时切换到单日模式计算对比
+            const originalMode = plugin.options.contentSpanMode;
+            plugin.updateOptions({ contentSpanMode: 'single' });
+            const singleMarks = plugin.generateMarks().filter(mark => mark.markType === 'content');
+            plugin.updateOptions({ contentSpanMode: originalMode });
+            
+            // 统计跨周任务
+            const crossWeekTasks = spanMarks.filter(mark => mark.spanInfo?.isMultiWeek);
+            const taskWeeks = {};
+            crossWeekTasks.forEach(mark => {
+                if (!taskWeeks[mark.rangeCode]) {
+                    taskWeeks[mark.rangeCode] = mark.spanInfo.totalWeeks;
+                }
+            });
+            
+            const totalWeeks = Object.values(taskWeeks);
+            const avgWeeks = totalWeeks.length > 0 ? 
+                (totalWeeks.reduce((a, b) => a + b, 0) / totalWeeks.length).toFixed(1) : 0;
+            const maxWeeks = totalWeeks.length > 0 ? Math.max(...totalWeeks) : 0;
+            
+            const efficiency = singleMarks.length > 0 ? 
+                (((singleMarks.length - spanMarks.length) / singleMarks.length) * 100).toFixed(1) : 0;
+            
+            // 更新显示
+            document.getElementById('totalTasks').textContent = plugin.ranges.length;
+            document.getElementById('crossWeekTasks').textContent = Object.keys(taskWeeks).length;
+            document.getElementById('avgWeeks').textContent = avgWeeks;
+            document.getElementById('maxWeeks').textContent = maxWeeks;
+            document.getElementById('efficiency').textContent = `${efficiency}%`;
+            document.getElementById('spanMarks').textContent = spanMarks.length;
+            document.getElementById('singleMarks').textContent = singleMarks.length;
+            
+            // 更新任务列表
+            const taskList = document.getElementById('taskList');
+            taskList.innerHTML = '';
+            plugin.ranges.forEach(range => {
+                const taskItem = document.createElement('div');
+                taskItem.className = 'task-item';
+                
+                const weeks = taskWeeks[range.code] || 1;
+                taskItem.innerHTML = `
+                    <div class="task-color" style="background: ${range.bgColor}"></div>
+                    <div class="task-name">${range.name}</div>
+                    <div class="task-weeks">${weeks}周</div>
+                `;
+                taskList.appendChild(taskItem);
+            });
+        }
+
+        // 全局函数
+        window.toggleSpanMode = function(mode) {
+            plugin.updateOptions({ contentSpanMode: mode });
+            
+            // 更新按钮状态
+            document.querySelectorAll('.control-group:first-child .btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // 更新显示
+            document.getElementById('currentMode').textContent = mode === 'span' ? '跨周模式' : '单日模式';
+            
+            generateCalendar();
+        };
+
+        window.changeAlignment = function(alignment) {
+            plugin.updateOptions({ contentAlignment: alignment });
+            
+            // 更新按钮状态
+            document.querySelectorAll('.control-group:nth-child(2) .btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // 更新显示
+            const alignmentText = {
+                'left': '左对齐',
+                'center': '居中',
+                'right': '右对齐'
+            };
+            document.getElementById('currentAlignment').textContent = alignmentText[alignment];
+            
+            generateCalendar();
+        };
+
+        window.addRandomTask = function() {
+            const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57', '#ff9ff3', '#54a0ff'];
+            const names = ['紧急修复', '功能开发', '代码审查', '测试验证', '文档编写', '性能优化', '安全检查'];
+            
+            const startDay = Math.floor(Math.random() * 20) + 1;
+            const duration = Math.floor(Math.random() * 10) + 3;
+            
+            const newTask = {
+                code: `task-${Date.now()}`,
+                name: names[Math.floor(Math.random() * names.length)],
+                startDate: `2025-08-${startDay.toString().padStart(2, '0')}`,
+                endDate: `2025-08-${Math.min(31, startDay + duration).toString().padStart(2, '0')}`,
+                color: '#fff',
+                bgColor: colors[Math.floor(Math.random() * colors.length)],
+                content: `随机生成的任务 - ${names[Math.floor(Math.random() * names.length)]}`,
+                data: { type: 'random', generated: new Date().toISOString() }
+            };
+            
+            plugin.addRange(newTask);
+            generateCalendar();
+        };
+
+        window.clearAllTasks = function() {
+            plugin.clearRanges();
+            generateCalendar();
+        };
+
+        window.resetDemo = function() {
+            plugin.clearRanges();
+            plugin.addRanges([...demoRanges]);
+            plugin.updateOptions({ 
+                contentSpanMode: 'span',
+                contentAlignment: 'left'
+            });
+            
+            // 重置按钮状态
+            document.querySelectorAll('.btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector('.control-group:first-child .btn:first-child').classList.add('active');
+            document.querySelector('.control-group:nth-child(2) .btn:first-child').classList.add('active');
+            
+            // 重置显示文本
+            document.getElementById('currentMode').textContent = '跨周模式';
+            document.getElementById('currentAlignment').textContent = '左对齐';
+            
+            generateCalendar();
+        };
+
+        // 初始化
+        generateCalendar();
+    </script>
+</body>
+</html>
